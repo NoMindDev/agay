@@ -1,0 +1,72 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  MessageSquare,
+  Users,
+  AlertCircle,
+} from "lucide-react";
+
+const DashboardLanding = () => {
+  const [currentTime, setCurrentTime] = useState(() => {
+    const now = new Date();
+    return now.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  });
+
+  return (
+    <div className="flex-1 p-6 flex flex-col items-center pt-16">
+      <h1 className="text-5xl font-medium text-gray-800">{currentTime}</h1>
+      <p className="text-xl text-orange-400 mt-4 mb-12">
+        Hello Sara, we are glad to have you.
+      </p>
+
+      <div className="grid grid-cols-3 gap-6 w-full max-w-4xl">
+        {/* Conversations Card */}
+        <Card className="bg-gray-50 border-0 shadow-sm">
+          <CardContent className="p-6">
+            <div className="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+              <MessageSquare className="h-4 w-4 text-white" />
+            </div>
+            <h3 className="font-medium text-lg mb-1">Conversations</h3>
+            <p className="text-sm text-gray-500">
+              Check out what the users are talking about
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Invite Members Card */}
+        <Card className="bg-gray-50 border-0 shadow-sm">
+          <CardContent className="p-6">
+            <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+              <Users className="h-4 w-4 text-orange-400" />
+            </div>
+            <h3 className="font-medium text-lg mb-1">Invite Members</h3>
+            <p className="text-sm text-gray-500">
+              Invite people to your organization to access your data
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Check Audits Card */}
+        <Card className="bg-gray-50 border-0 shadow-sm">
+          <CardContent className="p-6">
+            <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <AlertCircle className="h-4 w-4 text-red-400" />
+            </div>
+            <h3 className="font-medium text-lg mb-1">Check Audits</h3>
+            <p className="text-sm text-gray-500">
+              Invite people to your organization to access your data
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardLanding;
