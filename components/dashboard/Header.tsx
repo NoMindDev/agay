@@ -12,7 +12,7 @@ import { Settings, User, LogOut } from "lucide-react";
 
 const Header = () => {
   return (
-    <header className="h-16 border-b bg-white flex items-center justify-between px-6">
+    <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
       <h1 className="text-lg font-medium">Home</h1>
       <div className="flex items-center gap-2">
         <DropdownMenu>

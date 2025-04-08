@@ -1,18 +1,20 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Home,
-  Package,
-  Clock,
-  MessageSquare,
-  Settings,
-} from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Home, Package, Clock, MessageSquare, Settings } from "lucide-react";
 
 const Sidebar = () => {
+  const pathname = usePathname();
+
+  const isActive = (path: string) => {
+    return pathname === path;
+  };
   return (
-    <div className="w-56 bg-white border-r flex flex-col">
-      <div className="p-4 flex items-center gap-2 border-b">
+    <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
+      <div className="p-4 flex items-center gap-2">
         <div className="h-8 w-8 relative overflow-hidden rounded">
           {/* Replace with your actual logo PNG */}
           <Image
@@ -30,36 +32,56 @@ const Sidebar = () => {
         <p className="px-4 text-sm text-gray-500 mb-2">Navigations</p>
         <nav className="space-y-1">
           <Link
-            href="#"
-            className="flex items-center px-4 py-2 text-sm bg-gray-100 rounded-md mx-2"
+            href="/dashboard"
+            className={`flex items-center px-4 py-2 text-sm ${
+              isActive("/dashboard")
+                ? "bg-gray-100 text-gray-700 rounded-md mx-2"
+                : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            }`}
           >
             <Home className="h-5 w-5 mr-3 text-gray-500" />
             <span>Home</span>
           </Link>
           <Link
-            href="#"
-            className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            href="/dashboard/repositories"
+            className={`flex items-center px-4 py-2 text-sm ${
+              isActive("/dashboard/repositories")
+                ? "bg-gray-100 text-gray-700 rounded-md mx-2"
+                : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            }`}
           >
             <Package className="h-5 w-5 mr-3 text-gray-500" />
             <span>Repositories</span>
           </Link>
           <Link
-            href="#"
-            className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            href="/logs"
+            className={`flex items-center px-4 py-2 text-sm ${
+              isActive("/logs")
+                ? "bg-gray-100 text-gray-700 rounded-md mx-2"
+                : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            }`}
           >
             <Clock className="h-5 w-5 mr-3 text-gray-500" />
             <span>Logs</span>
           </Link>
           <Link
-            href="#"
-            className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            href="/conversations"
+            className={`flex items-center px-4 py-2 text-sm ${
+              isActive("/conversations")
+                ? "bg-gray-100 text-gray-700 rounded-md mx-2"
+                : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            }`}
           >
             <MessageSquare className="h-5 w-5 mr-3 text-gray-500" />
             <span>Conversations</span>
           </Link>
           <Link
-            href="#"
-            className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            href="/settings"
+            className={`flex items-center px-4 py-2 text-sm ${
+              isActive("/settings")
+                ? "bg-gray-100 text-gray-700 rounded-md mx-2"
+                : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            }`}
           >
             <Settings className="h-5 w-5 mr-3 text-gray-500" />
             <span>Settings</span>
