@@ -12,6 +12,7 @@ const Sidebar = () => {
   const isActive = (path: string) => {
     return pathname === path;
   };
+
   return (
     <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 flex items-center gap-2">
@@ -54,9 +55,9 @@ const Sidebar = () => {
             <span>Repositories</span>
           </Link>
           <Link
-            href="/logs"
+            href="/dashboard/logs"
             className={`flex items-center px-4 py-2 text-sm ${
-              isActive("/logs")
+              isActive("/dashboard/logs")
                 ? "bg-gray-100 text-gray-700 rounded-md mx-2"
                 : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
             }`}
@@ -65,9 +66,9 @@ const Sidebar = () => {
             <span>Logs</span>
           </Link>
           <Link
-            href="/conversations"
+            href="/dashboard/conversations"
             className={`flex items-center px-4 py-2 text-sm ${
-              isActive("/conversations")
+              isActive("/dashboard/conversations")
                 ? "bg-gray-100 text-gray-700 rounded-md mx-2"
                 : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
             }`}
@@ -76,9 +77,9 @@ const Sidebar = () => {
             <span>Conversations</span>
           </Link>
           <Link
-            href="/settings"
+            href="/dashboard/settings"
             className={`flex items-center px-4 py-2 text-sm ${
-              isActive("/settings")
+              isActive("/dashboard/settings")
                 ? "bg-gray-100 text-gray-700 rounded-md mx-2"
                 : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
             }`}
