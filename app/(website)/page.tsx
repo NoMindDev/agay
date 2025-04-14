@@ -1,58 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import Hero from "@/components/hero";
-import ConnectSupabaseSteps from "@/components/tutorial/connect-supabase-steps";
-import SignUpUserSteps from "@/components/tutorial/sign-up-user-steps";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import { Home, Plus, Send, User, Settings, LogOut } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Bot, BookOpen } from "lucide-react";
+import Link from "next/link";
 
-export default function Page() {
-  const [inputValue, setInputValue] = useState("");
+const WebsiteLanding = () => {
+  const [currentTime, setCurrentTime] = useState(() => {
+    const now = new Date();
+    return now.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  });
+
   return (
-    <>
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <h2 className="text-3xl font-light text-orange-400 mb-8">
-          Hello Sara,
-        </h2>
+    <div className="flex-1 p-6 flex flex-col items-center pt-16">
+      <h1 className="text-5xl font-medium text-gray-800">{currentTime}</h1>
+      <p className="text-xl text-orange-400 mt-4 mb-12">
+        Hello Sara, we are glad to have you.
+      </p>
 
-        {/* Recent Conversation Card */}
-        <div className="max-w-md w-full border border-gray-200 rounded-lg overflow-hidden">
-          <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
-            Move to recent conversation
-          </div>
-          <div className="p-4 flex items-start gap-3">
-            <span className="text-gray-500 mt-1">=</span>
-            <div className="text-gray-800">
-              Get the land with the Thram No 2 and the owner Rinzin
-            </div>
-            <button className="ml-auto text-gray-400 hover:text-gray-600">
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl">
+        {/* Chatbot Card */}
+        <Link href="/chats">
+          <Card className="bg-gray-50 border border-gray-200 cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl flex flex-col justify-between min-h-[200px]">
+            <CardContent className="p-6 flex flex-col justify-between h-full">
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                <Bot className="h-4 w-4 text-blue-500" />
+              </div>
+              <h3 className="font-medium text-lg mb-1">Chat with AI</h3>
+              <p className="text-sm text-gray-500">
+                Interact with the chatbot to get instant help and guidance.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
-      <div className="p-4 flex justify-center">
-        <div className="relative max-w-md w-full">
-          <input
-            type="text"
-            placeholder="Ask Agay"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="w-full border border-gray-300 rounded-full py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent"
-          />
-          <button
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            disabled={!inputValue}
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </div>
+        {/* Repositories Card */}
+        <Link href="/repositories">
+          <Card className="bg-gray-50 border border-gray-200 cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl flex flex-col justify-between min-h-[200px]">
+            <CardContent className="p-6 flex flex-col justify-between h-full">
+              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <BookOpen className="h-4 w-4 text-green-500" />
+              </div>
+              <h3 className="font-medium text-lg mb-1">Browse Repositories</h3>
+              <p className="text-sm text-gray-500">
+                Search and explore content from your uploaded documents.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
-    </>
+    </div>
   );
-}
+};
+
+export default WebsiteLanding;
 
 // <>
 //   <Hero />

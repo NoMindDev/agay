@@ -1,18 +1,35 @@
+"use client";
+
 import React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { User, Settings, LogOut } from "lucide-react";
+import Link from "next/link"; // Import Link from Next.js
+import { usePathname, useRouter } from "next/navigation";
 
 const Header = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const getTitle = () => {
+    if (pathname === "/") return "Home";
+    if (pathname.startsWith("/repositories")) return "Repositories";
+    if (pathname.startsWith("/chats")) return "Chats";
+    if (pathname.startsWith("/profile")) return "Profile";
+    if (pathname.startsWith("/setting")) return "Setting";
+    return "Home";
+  };
+
   return (
     <div className="h-16 border-b border-gray-200 flex items-center px-6">
-      <h1 className="text-xl text-gray-700">Chat</h1>
+      <h1 className="text-xl text-gray-700">{getTitle()}</h1>
       <div className="ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -26,16 +43,15 @@ const Header = () => {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {/* Use Link for navigation */}
+            <DropdownMenuItem onClick={() => router.push("/profile")}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/sign-in")}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>
             </DropdownMenuItem>
