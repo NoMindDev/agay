@@ -60,12 +60,12 @@ const Sidebar = () => {
       <div className="p-4 flex items-center">
         <Image
           src="/nlcs-logo.png"
-          alt="Agay Logo"
+          alt="NLCS Logo"
           width={32}
           height={32}
           className="rounded-md mr-2"
         />
-        <span className="text-xl text-gray-700">Agay</span>
+        <span className="text-xl text-gray-700">NLCS</span>
       </div>
 
       {/* New Chat Button */}

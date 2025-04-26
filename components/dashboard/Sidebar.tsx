@@ -26,7 +26,7 @@ const Sidebar = () => {
             className="object-cover"
           />
         </div>
-        <span className="text-xl font-medium text-gray-700">Agay</span>
+        <span className="text-xl font-medium text-gray-700">NLCS</span>
       </div>
 
       <div className="py-4">

@@ -45,7 +45,7 @@ const Header = () => {
                   height={32}
                 />
               </div>
-              <span className="text-sm font-medium text-gray-700">Sara</span>
+              <span className="text-sm font-medium text-gray-700">Kuenzang</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

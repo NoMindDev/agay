@@ -50,18 +50,18 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <div className="flex flex-col items-center mb-8">
-          {/* Agay Logo */}
+          {/* NLCS Logo */}
 
           <div className="h-12 w-12 relative mb-4">
             <Image
               src="/nlcs-logo.png" // make sure logo.png is in the /public directory
-              alt="Agay Logo"
+              alt="NLCS Logo"
               fill
               className="rounded object-cover"
             />
           </div>
 
-          <h1 className="text-2xl font-medium text-center">Login to Agay</h1>
+          <h1 className="text-2xl font-medium text-center">Login to NLCS</h1>
           <p className="text-sm text-foreground mt-2">
             Don't have an account?{" "}
             <Link className="text-blue-600 hover:underline" href="/sign-up">

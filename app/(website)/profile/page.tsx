@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
-  const [name, setName] = useState("John Doe");
+  const [name, setName] = useState("Kuenzang");
 
   const handleChangePassword = () => {
     // Reset error
@@ -59,7 +59,7 @@ export default function ProfilePage() {
           <Avatar className="h-24 w-24 mb-4">
             {/* <AvatarImage
               src="/placeholder.svg?height=96&width=96"
-              alt="John Doe"
+              alt="Kuenzang"
             /> */}
             <AvatarFallback>
               {name
@@ -91,7 +91,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">johndoe@gmail.com</p>
+                      <p className="font-medium">kuenzang@gmail.com</p>
                     </div>
                   </div>
 

@@ -19,7 +19,7 @@ const WebsiteLanding = () => {
     <div className="flex-1 p-6 flex flex-col items-center pt-16">
       <h1 className="text-5xl font-medium text-gray-800">{currentTime}</h1>
       <p className="text-xl text-orange-400 mt-4 mb-12">
-        Hello Sara, we are glad to have you.
+        Hello Kuenzang, we are glad to have you.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl">

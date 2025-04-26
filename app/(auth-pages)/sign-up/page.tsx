@@ -45,17 +45,17 @@ export default function SignUp() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <div className="flex flex-col items-center mb-8">
-          {/* Agay Logo */}
+          {/* NLCS Logo */}
           <div className="mb-4">
             <Image
               src="/nlcs-logo.png"
-              alt="Agay Logo"
+              alt="NLCS Logo"
               width={64}
               height={64}
               className="rounded"
             />
           </div>
-          <h1 className="text-2xl font-medium text-center">Register to Agay</h1>
+          <h1 className="text-2xl font-medium text-center">Register to NLCS</h1>
           <p className="text-sm text-gray-500 mt-2">
             Already have an account?{" "}
             <Link className="text-blue-600 hover:underline" href="/sign-in">
