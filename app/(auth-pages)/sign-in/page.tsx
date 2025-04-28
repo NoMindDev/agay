@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
 
+import { SubmitButton } from "@/components/submit-button";
+import { signInAction } from "@/app/actions";
+
 // Dummy users
 const dummyUsers = [
   {
@@ -123,7 +126,6 @@ export default function Login() {
                 Login
               </button>
             </div>
-
             {message && (
               <p className="text-sm text-red-500 text-center">{message}</p>
             )}
