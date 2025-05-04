@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -9,43 +9,22 @@ import Image from "next/image";
 
 import { SubmitButton } from "@/components/submit-button";
 import { signInAction } from "@/app/actions";
-
-// Dummy users
-const dummyUsers = [
-  {
-    email: "admin@gmail.com",
-    password: "admin123",
-    role: "admin",
-  },
-  {
-    email: "user@gmail.com",
-    password: "user123",
-    role: "user",
-  },
-];
+import { FormMessage, Message } from "@/components/form-message";
 
 export default function Login() {
-  const router = useRouter();
-  const [formState, setFormState] = useState({ email: "", password: "" });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<Message | null>(null);
+  const router = useRouter(); // Initialize useRouter
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
 
-    const user = dummyUsers.find(
-      (u) =>
-        u.email === formState.email.trim() &&
-        u.password === formState.password.trim()
-    );
+    const result = await signInAction(formData);
 
-    if (user) {
-      if (user.role === "admin") {
-        router.push("/dashboard");
-      } else {
-        router.push("/");
-      }
+    if ("success" in result) {
+      router.push("/"); // Redirect to /protected on success
     } else {
-      setMessage("Invalid email or password.");
+      setMessage(result); // Set the error message
     }
   };
 
@@ -53,17 +32,14 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <div className="flex flex-col items-center mb-8">
-          {/* NLCS Logo */}
-
           <div className="h-12 w-12 relative mb-4">
             <Image
-              src="/nlcs-logo.png" // make sure logo.png is in the /public directory
+              src="/nlcs-logo.png"
               alt="NLCS Logo"
               fill
               className="rounded object-cover"
             />
           </div>
-
           <h1 className="text-2xl font-medium text-center">Login to NLCS</h1>
           <p className="text-sm text-foreground mt-2">
             Don't have an account?{" "}
@@ -73,7 +49,7 @@ export default function Login() {
           </p>
         </div>
 
-        <form className="flex flex-col" onSubmit={handleLogin}>
+        <form className="flex flex-col" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-700">
@@ -85,10 +61,6 @@ export default function Login() {
                 placeholder="you@example.com"
                 required
                 className="p-3 border rounded-md w-full"
-                value={formState.email}
-                onChange={(e) =>
-                  setFormState({ ...formState, email: e.target.value })
-                }
               />
             </div>
 
@@ -111,37 +83,22 @@ export default function Login() {
                 placeholder="Your password"
                 required
                 className="p-3 border rounded-md w-full"
-                value={formState.password}
-                onChange={(e) =>
-                  setFormState({ ...formState, password: e.target.value })
-                }
               />
             </div>
 
+            {message && <FormMessage message={message} />}
+
             <div className="mt-4">
-              <button
-                type="submit"
+              <SubmitButton
+                pendingText="Logging In..."
                 className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition-colors"
               >
                 Login
-              </button>
+              </SubmitButton>
             </div>
-            {message && (
-              <p className="text-sm text-red-500 text-center">{message}</p>
-            )}
           </div>
         </form>
       </div>
     </div>
   );
-}
-
-{
-  /* <SubmitButton
-  pendingText="Logging In..."
-  formAction={signInAction}
-  className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition-colors"
->
-  Login
-</SubmitButton>; */
 }
