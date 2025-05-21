@@ -17,7 +17,7 @@ import { signOutAction } from "@/app/actions";
 // Utility function to get page title
 const getPageTitle = (pathname: string) => {
   if (pathname.includes("/dashboard/settings/invite-agent"))
-    return "Invite Agent";
+    return "Create Member";
   if (pathname.includes("/dashboard/profile")) return "Profile";
   if (pathname.includes("/dashboard/settings")) return "Settings";
   if (pathname.includes("/dashboard/conversations")) return "Conversations";

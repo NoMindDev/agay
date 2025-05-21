@@ -4,6 +4,9 @@ import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { createSupabaseAdmin } from "@/utils/supabase/admin";
+
+// Auth actions
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -133,3 +136,55 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
+
+// Member actions
+export const createMember = async (data: {
+  name: string;
+  role: "ADMIN" | "USER";
+  status: "ACTIVE" | "RESIGNED";
+  email: string;
+  password: string;
+  confirm: string;
+}) => {
+  const supabase = await createSupabaseAdmin();
+
+  // Create account
+  const createResult = await supabase.auth.admin.createUser({
+    email: data.email,
+    password: data.password,
+    email_confirm: true,
+    user_metadata: {
+      name: data.name,
+      role: data.role,
+    },
+  });
+
+  if (createResult.error?.message) {
+    return JSON.stringify(createResult);
+  } else {
+    // Create member
+    const memberResult = await supabase.from("member").insert({
+      name: data.name,
+      id: createResult.data.user?.id,
+    });
+
+    if (memberResult.error?.message) {
+      return JSON.stringify(memberResult);
+    } else {
+      // Create permission
+      const permissionResult = await supabase.from("permission").insert({
+        role: data.role,
+        member_id: createResult.data.user?.id,
+        status: data.status,
+      });
+
+      return JSON.stringify(permissionResult);
+    }
+  }
+};
+
+export const updateMemberById = async (FormData: FormData) => {};
+
+export const deleteMemberById = async (FormData: FormData) => {};
+
+export async function readMembers() {}

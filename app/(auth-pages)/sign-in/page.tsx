@@ -41,12 +41,6 @@ export default function Login() {
             />
           </div>
           <h1 className="text-2xl font-medium text-center">Login to NLCS</h1>
-          <p className="text-sm text-foreground mt-2">
-            Don't have an account?{" "}
-            <Link className="text-blue-600 hover:underline" href="/sign-up">
-              Sign up
-            </Link>
-          </p>
         </div>
 
         <form className="flex flex-col" onSubmit={handleSubmit}>

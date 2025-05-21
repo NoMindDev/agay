@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, Trash, ArrowUpDown, Pencil} from "lucide-react";
 
 // Sample members data
 const initialMembers = [
@@ -38,7 +38,7 @@ const initialMembers = [
     email: "johndoe@gmail.com",
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "JD",
-    joinedAt: "2025-04-09T18:00:00Z",
+    createdAt: "2025-04-09T18:00:00Z",
     invitedAt: "2025-04-08T15:00:00Z",
   },
   {
@@ -47,7 +47,7 @@ const initialMembers = [
     email: "sara@gmail.com",
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "S",
-    joinedAt: "2025-04-09T02:00:00Z",
+    createdAt: "2025-04-09T02:00:00Z",
     invitedAt: "2025-04-08T15:00:00Z",
   },
   {
@@ -56,7 +56,7 @@ const initialMembers = [
     email: "alice@gmail.com",
     avatar: "",
     initials: "A",
-    joinedAt: "2025-04-08T15:00:00Z",
+    createdAt: "2025-04-08T15:00:00Z",
     invitedAt: "2025-03-04T15:00:00Z",
   },
   {
@@ -65,7 +65,7 @@ const initialMembers = [
     email: "bob@gmail.com",
     avatar: "",
     initials: "B",
-    joinedAt: "2025-03-04T15:00:00Z",
+    createdAt: "2025-03-04T15:00:00Z",
     invitedAt: "2025-03-04T15:00:00Z",
   },
   {
@@ -74,7 +74,7 @@ const initialMembers = [
     email: "zabab@gmail.com",
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "Z",
-    joinedAt: "2025-02-01T15:00:00Z",
+    createdAt: "2025-02-01T15:00:00Z",
     invitedAt: "2025-02-01T15:00:00Z",
   },
 ];
@@ -90,6 +90,11 @@ export default function SettingsPage() {
   }>({ key: null, direction: "asc" });
 
   const handleDeleteMember = (memberId: number) => {
+    setMemberToDelete(memberId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditMember = (memberId: number) => {
     setMemberToDelete(memberId);
     setIsDeleteDialogOpen(true);
   };
@@ -164,8 +169,7 @@ export default function SettingsPage() {
                 <TableHead>Profile</TableHead>
                 {renderHeader("Name", "name")}
                 {renderHeader("Email", "email")}
-                {renderHeader("Joined At", "joinedAt")}
-                {renderHeader("Invited At", "invitedAt")}
+                {renderHeader("Created At", "createdAt")}
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,10 +187,7 @@ export default function SettingsPage() {
                   <TableCell className="text-black">{member.name}</TableCell>
                   <TableCell className="text-black">{member.email}</TableCell>
                   <TableCell className="text-black">
-                    {formatDate(member.joinedAt)}
-                  </TableCell>
-                  <TableCell className="text-black">
-                    {formatDate(member.invitedAt)}
+                    {formatDate(member.createdAt)}
                   </TableCell>
                   <TableCell className="text-black">
                     <DropdownMenu>
@@ -197,6 +198,12 @@ export default function SettingsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-white">
+                        <DropdownMenuItem
+                          onClick={() => handleEditMember(member.id)}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Update Agent
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600 focus:text-red-600"
                           onClick={() => handleDeleteMember(member.id)}
