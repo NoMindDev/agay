@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Settings, User, LogOut } from "lucide-react";
+import { signOutAction } from "@/app/actions";
 
 // Utility function to get page title
 const getPageTitle = (pathname: string) => {
-  if (pathname.includes("/dashboard/settings/invite-agent")) return "Invite Agent";
+  if (pathname.includes("/dashboard/settings/invite-agent"))
+    return "Invite Agent";
   if (pathname.includes("/dashboard/profile")) return "Profile";
   if (pathname.includes("/dashboard/settings")) return "Settings";
   if (pathname.includes("/dashboard/conversations")) return "Conversations";
@@ -45,7 +47,9 @@ const Header = () => {
                   height={32}
                 />
               </div>
-              <span className="text-sm font-medium text-gray-700">Kuenzang</span>
+              <span className="text-sm font-medium text-gray-700">
+                Kuenzang
+              </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -62,16 +66,15 @@ const Header = () => {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-red-600"
-              onClick={() => {
-                // Optionally clear auth tokens / session here
-                router.push("/sign-in");
-              }}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="w-full flex items-center px-2 py-1 text-left bg-transparent hover:bg-gray-100 text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </button>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -13,6 +13,7 @@ import Image from "next/image";
 import { User, Settings, LogOut } from "lucide-react";
 import Link from "next/link"; // Import Link from Next.js
 import { usePathname, useRouter } from "next/navigation";
+import { signOutAction } from "@/app/actions";
 
 const Header = () => {
   const pathname = usePathname();
@@ -51,10 +52,15 @@ const Header = () => {
               <span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/sign-in")}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Logout</span>
-            </DropdownMenuItem>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="w-full flex items-center px-2 py-1 text-left bg-transparent hover:bg-gray-100"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </button>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
