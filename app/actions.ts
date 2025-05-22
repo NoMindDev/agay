@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseAdmin } from "@/utils/supabase/admin";
-
+import { readUserSession } from "@/utils/supabase/auth";
 // Auth actions
 
 export const signUpAction = async (formData: FormData) => {
@@ -146,6 +146,14 @@ export const createMember = async (data: {
   password: string;
   confirm: string;
 }) => {
+  // Authorization
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
+
   const supabase = await createSupabaseAdmin();
 
   // Create account

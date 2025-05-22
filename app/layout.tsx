@@ -2,6 +2,9 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "@/styles/main.css";
 import { Toaster } from "@/components/ui/sonner";
+import { readUserSession } from "@/utils/supabase/auth";
+import { redirect } from "next/navigation";
+import { useUserStore } from "@/lib/store/user";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -18,11 +21,17 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { data: userSession } = await readUserSession();
+
+  if (!userSession.session) {
+    return redirect("/sign-in");
+  }
+
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground h-screen">

@@ -216,14 +216,25 @@ export default function InviteAgentPage() {
               )}
             />
 
-            <Button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2"
-              variant="outline"
-              disabled={isPending}
-            >
-              {isPending ? "Loading..." : "Submit"}
-            </Button>
+            <div className="w-full flex items-center justify-between gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() => router.push("/dashboard/settings")}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2"
+                variant="outline"
+                disabled={isPending}
+              >
+                {isPending ? "Loading..." : "Submit"}
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash, ArrowUpDown, Pencil} from "lucide-react";
+import { MoreHorizontal, Trash, ArrowUpDown, Pencil } from "lucide-react";
+import { useUserStore } from "@/lib/store/user";
+import { readUserSession } from "@/utils/supabase/client";
 
 // Sample members data
 const initialMembers = [
@@ -80,6 +82,7 @@ const initialMembers = [
 ];
 
 export default function SettingsPage() {
+  const user = useUserStore((state) => state.user);
   const router = useRouter();
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -88,6 +91,24 @@ export default function SettingsPage() {
     key: keyof (typeof initialMembers)[0] | null;
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
+
+  // User
+  useEffect(() => {
+    const fetchSession = async () => {
+      const {
+        data: { session },
+      } = await readUserSession();
+      if (!session) {
+        router.push("/sign-in");
+      } else {
+        useUserStore.setState({ user: session.user });
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  const isAdmin = user?.user_metadata?.role === "ADMIN";
 
   const handleDeleteMember = (memberId: number) => {
     setMemberToDelete(memberId);
@@ -154,12 +175,15 @@ export default function SettingsPage() {
               org.
             </p>
           </div>
-          <Button
-            className="bg-orange-500 hover:bg-orange-600"
-            onClick={() => router.push("/dashboard/settings/invite-agent")}
-          >
-            Add New Member
-          </Button>
+
+          {isAdmin && (
+            <Button
+              className="bg-orange-500 hover:bg-orange-600"
+              onClick={() => router.push("/dashboard/settings/invite-agent")}
+            >
+              Add New Member
+            </Button>
+          )}
         </div>
 
         <div className="border rounded-md overflow-hidden">
