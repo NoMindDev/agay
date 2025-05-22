@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { Calendar, X, ChevronDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,33 +32,31 @@ import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
 
-const logEntries = [
+const logEntry = [
   {
     id: 1,
-    date: "Today, 6:00 PM",
-    actualDate: new Date(2025, 3, 9, 18, 0), // Oct 30, 2025, 6:00 PM
-    user: {
-      name: "Sara",
-      avatar: "/nlcs-logo.png?height=32&width=32",
-      initials: "S",
-    },
+    date: new Date(),
+    // actualDate: new Date(2025, 3, 9, 18, 0), // Oct 30, 2025, 6:00 PM
+    user_name: " ",
+    user_email: " ",
     event: "Search",
     description: 'Searched for "User details"',
-    resource: { type: "search", label: "Search" },
+    resource_link: " ",
+    resource_name: " ",
   },
-  {
-    id: 2,
-    date: "Today, 2:00 AM",
-    actualDate: new Date(2025, 3, 9, 2, 0), // Oct 30, 2025, 2:00 AM
-    user: {
-      name: "John",
-      avatar: "/nlcs-logo.png?height=32&width=32",
-      initials: "J",
-    },
-    event: "Chatbot",
-    description: 'Asked bot, "Hello, what is your name?"',
-    resource: { type: "conversation", label: "Move to conversation" },
-  },
+  // {
+  //   id: 2,
+  //   date: "Today, 2:00 AM",
+  //   actualDate: new Date(2025, 3, 9, 2, 0), // Oct 30, 2025, 2:00 AM
+  //   user: {
+  //     name: "John",
+  //     avatar: "/nlcs-logo.png?height=32&width=32",
+  //     initials: "J",
+  //   },
+  //   event: "Chatbot",
+  //   description: 'Asked bot, "Hello, what is your name?"',
+  //   resource: { type: "conversation", label: "Move to conversation" },
+  // },
   // Add other entries as needed...
 ];
 
@@ -74,10 +72,24 @@ export default function LogsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [dateRangeText, setDateRangeText] = useState("Select Date Range");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
+  const [logEntries, setLogEntries] = useState(logEntry);
   // Prevent the user from selecting dates after today
   const today = new Date();
-
+  useEffect(() => {
+    const fetchLogs = async () => {
+      console.log("Fetching logs...");
+      const res = await fetch("/api/logs");
+      if (!res.ok) {
+        console.error("Failed to fetch logs");
+        return;
+      }
+      const data = await res.json();
+      console.log(data.data, "logs data");
+      setLogEntries(data.data);
+      // handle response if needed
+    };
+    fetchLogs();
+  }, []);
   // Update the date range text when the date range changes
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -119,7 +131,7 @@ export default function LogsPage() {
       // Normalize "to" to end of the day
       to.setHours(23, 59, 59, 999);
 
-      dateMatch = log.actualDate >= from && log.actualDate <= to;
+      dateMatch = log.date >= from && log.date <= to;
     }
 
     return eventTypeMatch && dateMatch;
@@ -212,29 +224,38 @@ export default function LogsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[180px]">Date</TableHead>
-                <TableHead>User</TableHead>
+                <TableHead>User Name</TableHead>
+                <TableHead>User Email</TableHead>
                 <TableHead>Event</TableHead>
                 <TableHead className="max-w-[300px]">
                   Event Description
                 </TableHead>
-                <TableHead>Resource</TableHead>
+                <TableHead>Resource </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredLogs.length > 0 ? (
                 filteredLogs.map((entry) => (
                   <TableRow key={entry.id}>
-                    <TableCell className="text-black">{entry.date}</TableCell>
-                    <TableCell>
-                      <Avatar className="h-8 w-8">
-                        {entry.user.avatar ? (
+                    <TableCell className="text-black">
+                      {entry.date instanceof Date
+                        ? format(entry.date, "yyyy-MM-dd")
+                        : format(new Date(entry.date), "yyyy-MM-dd")}
+                    </TableCell>
+                    <TableCell className="text-black">
+                      {/* <Avatar className="h-8 w-8">
+                        {entry.user_name ? (
                           <AvatarImage
                             src={entry.user.avatar}
                             alt={entry.user.name}
                           />
                         ) : null}
                         <AvatarFallback>{entry.user.initials}</AvatarFallback>
-                      </Avatar>
+                      </Avatar> */}
+                      {entry.user_name}
+                    </TableCell>
+                    <TableCell className="text-black">
+                      {entry.user_email}
                     </TableCell>
                     <TableCell className="text-black">{entry.event}</TableCell>
                     <TableCell className="max-w-[300px] truncate text-black">
@@ -242,16 +263,11 @@ export default function LogsPage() {
                     </TableCell>
                     <TableCell>
                       <Link
-                        href="#"
-                        className={cn(
-                          "text-blue-500 hover:underline",
-                          entry.resource.type === "search" && "text-blue-500",
-                          entry.resource.type === "conversation" &&
-                            "text-blue-500",
-                          entry.resource.type === "download" && "text-blue-500"
-                        )}
+                        href={entry.resource_link}
+                        target="_blank"
+                        className="text-blue-500 hover:underline"
                       >
-                        {entry.resource.label}
+                        {entry.resource_name}
                       </Link>
                     </TableCell>
                   </TableRow>

@@ -1,30 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Search, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 // Repository files with the required naming format
-const repositoryFiles = [
-  { name: "1967-10-06-01.pdf" },
-  { name: "1967-10-06-02.pdf" },
-  { name: "1968-02-14-01.pdf" },
-  { name: "1970-07-21-01.pdf" },
-  { name: "1971-03-15-02.pdf" },
-  { name: "1980-01-01-01.pdf" },
-  { name: "1999-12-31-01.pdf" },
-  { name: "2024-04-01-01.pdf" },
-].map((file) => ({
-  ...file,
-  type: "pdf",
-  icon: <FileText className="h-5 w-5 text-white" />,
-  thumbnail: "/placeholder.jpeg?height=200&width=150",
-}));
+// const repositoryFiles = [
+//   { name: "1967-10-06-01.pdf" },
+//   { name: "1967-10-06-02.pdf" },
+//   { name: "1968-02-14-01.pdf" },
+//   { name: "1970-07-21-01.pdf" },
+//   { name: "1971-03-15-02.pdf" },
+//   { name: "1980-01-01-01.pdf" },
+//   { name: "1999-12-31-01.pdf" },
+//   { name: "2024-04-01-01.pdf" },
+// ].map((file) => ({
+//   ...file,
+//   type: "pdf",
+//   icon: <FileText className="h-5 w-5 text-white" />,
+//   thumbnail: "/placeholder.jpeg?height=200&width=150",
+// }));
 
 export default function RepositoriesPage() {
+  const [repositoryFiles, setRepositoryFiles] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const saveToLog = async (file: any) => {
+    const res = await fetch("/api/logs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // date:new Date().toISOString(),
+        user_email: "",
+        user_name: "",
+        event: "viewing file",
+        description: "file viewed by the user",
+        resource_name: file.name,
+        resource_link: file.link,
+      }),
+    });
+    const data = await res.json();
+    console.log(data, " data from logs");
+  };
+  useEffect(() => {
+    const fetchFiles = async () => {
+      const res = await fetch("/api/files");
+      const files = await res.json();
+      console.log(files, " data from api");
+      const repoFiles = files.map((file: any) => ({
+        ...file,
+        type: "pdf",
+        icon: <FileText className="h-5 w-5 text-white" />,
+        thumbnail: "/placeholder.jpeg?height=200&width=150",
+      }));
+      setRepositoryFiles(repoFiles);
+    };
+    fetchFiles();
+  }, []);
   const filteredFiles = repositoryFiles.filter((file) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -51,10 +85,14 @@ export default function RepositoriesPage() {
               {filteredFiles.map((file, index) => (
                 <a
                   key={index}
-                  href={`/pdfs/${file.name}`} // Adjust this path if files are stored elsewhere
+                  href={file.link} // Adjust this path if files are stored elsewhere
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    saveToLog(file);
+                  }}
                 >
                   <div className="bg-white rounded-md overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
                     <div className="relative">
