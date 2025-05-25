@@ -39,6 +39,26 @@ export default function RepositoriesPage() {
     };
     fetchFiles();
   }, []);
+
+  const saveToLog = async (file: any) => {
+    const res = await fetch("/api/logs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // date:new Date().toISOString(),
+        user_email: "",
+        user_name: "",
+        event: "viewing file",
+        description: "file viewed by the user",
+        resource_name: file.name,
+        resource_link: file.link,
+      }),
+    });
+    const data = await res.json();
+    console.log(data, " data from logs");
+  };
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredFiles = repositoryFiles.filter((file) =>
@@ -72,6 +92,10 @@ export default function RepositoriesPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    saveToLog(file);
+                  }}
                 >
                   <div className="bg-white rounded-md overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
                     <div className="relative">
