@@ -2,10 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const updateSession = async (request: NextRequest) => {
-  // This `try/catch` block is only here for the interactive tutorial.
-  // Feel free to remove once you have Supabase connected.
   try {
-    // Create an unmodified response
     let response = NextResponse.next({
       request: {
         headers: request.headers,
@@ -22,30 +19,59 @@ export const updateSession = async (request: NextRequest) => {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
+              request.cookies.set(name, value)
             );
             response = NextResponse.next({
               request,
             });
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, options)
             );
           },
         },
-      },
+      }
     );
 
-    // This will refresh session if expired - required for Server Components
-    // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
+    // const user = await supabase.auth.getUser();
+    // const protectedRoutes = ["/", "/dashboard", "/protected"];
 
-    // protected routes
-    if (request.nextUrl.pathname.startsWith("/protected") && user.error) {
+    // const isProtected = protectedRoutes.some(
+    //   (path) =>
+    //     request.nextUrl.pathname === path ||
+    //     request.nextUrl.pathname.startsWith(`${path}/`)
+    // );
+
+    // if (isProtected && user.error) {
+    //   return NextResponse.redirect(new URL("/sign-in", request.url));
+    // }
+
+    const PUBLIC_ROUTES = ["/sign-in", "/forgot-password"];
+    const pathname = request.nextUrl.pathname;
+
+    // Allow public routes without auth
+    const isPublic = PUBLIC_ROUTES.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    );
+
+    const { data: userData, error } = await supabase.auth.getUser();
+
+    if (error || !userData?.user) {
+      // Allow unauthenticated users on public routes
+      if (isPublic) return response;
+
+      // Redirect to sign-in on protected routes
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    if (request.nextUrl.pathname === "/" && !user.error) {
-      return NextResponse.redirect(new URL("/protected", request.url));
+    const role = userData.user.user_metadata?.role;
+
+    // Role-based access
+    if (pathname.startsWith("/dashboard") && role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    if (pathname === "/" && role !== "USER") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     return response;

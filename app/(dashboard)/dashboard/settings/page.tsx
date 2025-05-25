@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, Trash, ArrowUpDown, Pencil } from "lucide-react";
+import { useUserStore } from "@/lib/store/user";
+import { readUserSession } from "@/utils/supabase/client";
 
 // Sample members data
 const initialMembers = [
@@ -38,7 +40,7 @@ const initialMembers = [
     email: "johndoe@gmail.com",
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "JD",
-    joinedAt: "2025-04-09T18:00:00Z",
+    createdAt: "2025-04-09T18:00:00Z",
     invitedAt: "2025-04-08T15:00:00Z",
   },
   {
@@ -47,7 +49,7 @@ const initialMembers = [
     email: "sara@gmail.com",
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "S",
-    joinedAt: "2025-04-09T02:00:00Z",
+    createdAt: "2025-04-09T02:00:00Z",
     invitedAt: "2025-04-08T15:00:00Z",
   },
   {
@@ -56,7 +58,7 @@ const initialMembers = [
     email: "alice@gmail.com",
     avatar: "",
     initials: "A",
-    joinedAt: "2025-04-08T15:00:00Z",
+    createdAt: "2025-04-08T15:00:00Z",
     invitedAt: "2025-03-04T15:00:00Z",
   },
   {
@@ -65,7 +67,7 @@ const initialMembers = [
     email: "bob@gmail.com",
     avatar: "",
     initials: "B",
-    joinedAt: "2025-03-04T15:00:00Z",
+    createdAt: "2025-03-04T15:00:00Z",
     invitedAt: "2025-03-04T15:00:00Z",
   },
   {
@@ -74,12 +76,13 @@ const initialMembers = [
     email: "zabab@gmail.com",
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "Z",
-    joinedAt: "2025-02-01T15:00:00Z",
+    createdAt: "2025-02-01T15:00:00Z",
     invitedAt: "2025-02-01T15:00:00Z",
   },
 ];
 
 export default function SettingsPage() {
+  const user = useUserStore((state) => state.user);
   const router = useRouter();
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -89,9 +92,33 @@ export default function SettingsPage() {
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
 
+  console.log("Inside the setting page");
+
+  // User
+  useEffect(() => {
+    const fetchSession = async () => {
+      const {
+        data: { session },
+      } = await readUserSession();
+      if (!session) {
+        router.push("/sign-in");
+      } else {
+        useUserStore.setState({ user: session.user });
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  const isAdmin = user?.user_metadata?.role === "ADMIN";
+
   const handleDeleteMember = (memberId: number) => {
     setMemberToDelete(memberId);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditMember = (memberId: number) => {
+    router.push(`/dashboard/settings/edit-member/${memberId}`);
   };
 
   const confirmDelete = () => {
@@ -149,12 +176,15 @@ export default function SettingsPage() {
               org.
             </p>
           </div>
-          <Button
-            className="bg-orange-500 hover:bg-orange-600"
-            onClick={() => router.push("/dashboard/settings/invite-agent")}
-          >
-            Add New Member
-          </Button>
+
+          {isAdmin && (
+            <Button
+              className="bg-orange-500 hover:bg-orange-600"
+              onClick={() => router.push("/dashboard/settings/invite-agent")}
+            >
+              Add New Member
+            </Button>
+          )}
         </div>
 
         <div className="border rounded-md overflow-hidden">
@@ -164,8 +194,7 @@ export default function SettingsPage() {
                 <TableHead>Profile</TableHead>
                 {renderHeader("Name", "name")}
                 {renderHeader("Email", "email")}
-                {renderHeader("Joined At", "joinedAt")}
-                {renderHeader("Invited At", "invitedAt")}
+                {renderHeader("Created At", "createdAt")}
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,10 +212,7 @@ export default function SettingsPage() {
                   <TableCell className="text-black">{member.name}</TableCell>
                   <TableCell className="text-black">{member.email}</TableCell>
                   <TableCell className="text-black">
-                    {formatDate(member.joinedAt)}
-                  </TableCell>
-                  <TableCell className="text-black">
-                    {formatDate(member.invitedAt)}
+                    {formatDate(member.createdAt)}
                   </TableCell>
                   <TableCell className="text-black">
                     <DropdownMenu>
@@ -198,11 +224,17 @@ export default function SettingsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-white">
                         <DropdownMenuItem
+                          onClick={() => handleEditMember(member.id)}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Update Member
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           className="text-red-600 focus:text-red-600"
                           onClick={() => handleDeleteMember(member.id)}
                         >
                           <Trash className="mr-2 h-4 w-4" />
-                          Delete Agent
+                          Delete Member
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

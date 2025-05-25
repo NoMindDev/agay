@@ -4,6 +4,9 @@ import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { createSupabaseAdmin } from "@/utils/supabase/admin";
+import { readUserSession } from "@/utils/supabase/auth";
+// Auth actions
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -50,11 +53,11 @@ export const signInAction = async (formData: FormData) => {
   });
 
   if (error) {
-    console.log("Login Error " + error);
-    return encodedRedirect("error", "/sign-in", error.message);
+    console.log("Login Error: " + error.message);
+    return { error: error.message }; // Return error message
   }
 
-  return redirect("/protected");
+  return { success: "Login successful!" }; // Return success message
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -133,3 +136,63 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
+
+// Member actions
+export const createMember = async (data: {
+  name: string;
+  role: "ADMIN" | "USER";
+  status: "ACTIVE" | "RESIGNED";
+  email: string;
+  password: string;
+  confirm: string;
+}) => {
+  // Authorization
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
+
+  const supabase = await createSupabaseAdmin();
+
+  // Create account
+  const createResult = await supabase.auth.admin.createUser({
+    email: data.email,
+    password: data.password,
+    email_confirm: true,
+    user_metadata: {
+      name: data.name,
+      role: data.role,
+    },
+  });
+
+  if (createResult.error?.message) {
+    return JSON.stringify(createResult);
+  } else {
+    // Create member
+    const memberResult = await supabase.from("member").insert({
+      name: data.name,
+      id: createResult.data.user?.id,
+    });
+
+    if (memberResult.error?.message) {
+      return JSON.stringify(memberResult);
+    } else {
+      // Create permission
+      const permissionResult = await supabase.from("permission").insert({
+        role: data.role,
+        member_id: createResult.data.user?.id,
+        status: data.status,
+      });
+
+      return JSON.stringify(permissionResult);
+    }
+  }
+};
+
+export const updateMemberById = async (FormData: FormData) => {};
+
+export const deleteMemberById = async (FormData: FormData) => {};
+
+export async function readMembers() {}

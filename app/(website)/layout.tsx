@@ -4,10 +4,28 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";
 import AgayLogo from "@/components/agay-logo";
+
 import Sidebar from "@/components/website/Sidebar";
 import Header from "@/components/website/Header";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // const supabase = await createClient();
+
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser();
+
+  // if (!user) {
+  //   redirect("/sign-in"); // Redirect to the login page if not authenticated
+  // }
+
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Fixed Sidebar */}
