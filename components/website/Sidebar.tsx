@@ -1,43 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Home, Plus, Send, Pencil } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
-const initialConversations = [
-  { id: "1", title: "Karma Land" },
-  { id: "2", title: "Faq what is" },
-  { id: "3", title: "Questions re" },
-  { id: "4", title: "How to make" },
-  { id: "5", title: "Another chat" },
-  { id: "6", title: "Long chat thread" },
-  { id: "7", title: "Test chat" },
-  { id: "8", title: "Another one" },
-  { id: "9", title: "Legal Process Overview" },
-  { id: "10", title: "Contract Template FAQ" },
-  { id: "11", title: "Intellectual Property Help" },
-  { id: "12", title: "Startup Compliance Tips" },
-  { id: "13", title: "Tenant Rights Bhutan" },
-  { id: "14", title: "Employment Law Guide" },
-  { id: "15", title: "Digital Signatures Info" },
-]; // ... more as needed
+type Conversation = {
+  id: string;
+  title: string;
+};
 
 const Sidebar = () => {
+  const supabase = createClient();
   const pathname = usePathname();
   const router = useRouter();
 
-  const [conversations, setConversations] = useState(initialConversations);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
 
   const handleNewChat = () => {
-    const newId = (conversations.length + 1).toString();
-    const newConv = { id: newId, title: `New Chat ${newId}` };
-    setConversations([...conversations, newConv]);
-    router.push(`/chats/${newId}`);
+    router.push(`/chats`);
   };
 
   const handleRename = (id: string) => {
@@ -46,13 +33,123 @@ const Sidebar = () => {
     if (conv) setEditedTitle(conv.title);
   };
 
-  const handleRenameSubmit = () => {
-    if (!editingId) return;
+  // const handleRenameSubmit = () => {
+  //   if (!editingId) return;
+  //   setConversations((prev) =>
+  //     prev.map((c) => (c.id === editingId ? { ...c, title: editedTitle } : c))
+  //   );
+  //   setEditingId(null);
+  // };
+
+  const handleRenameSubmit = async () => {
+    if (!editingId || editedTitle.trim() === "") return;
+
+    const { error } = await supabase
+      .from("conversations")
+      .update({ title: editedTitle.trim() })
+      .eq("id", editingId);
+
+    if (error) {
+      toast.error("Error updating title", {
+        description: error.message,
+      });
+      return;
+    }
+
     setConversations((prev) =>
-      prev.map((c) => (c.id === editingId ? { ...c, title: editedTitle } : c))
+      prev.map((c) =>
+        c.id === editingId ? { ...c, title: editedTitle.trim() } : c
+      )
     );
     setEditingId(null);
   };
+
+  // Fetch conversations
+  useEffect(() => {
+    const fetchConversations = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        toast.error("User fetch error", {
+          description: userError?.message || "Could not fetch user.",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("id,title,created_by")
+        .eq("created_by", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast.error("Error fetching conversations", {
+          description: error.message,
+        });
+      } else {
+        setConversations(data as Conversation[]);
+        toast.success("Conversations loaded!");
+      }
+    };
+
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    let userId: string;
+
+    const setupRealtime = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        toast.error("User fetch error", {
+          description: userError?.message || "Could not fetch user.",
+        });
+        return;
+      }
+
+      userId = user.id;
+
+      const channel = supabase
+        .channel("realtime-conversations")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "conversations",
+          },
+          (payload) => {
+            const newConversation = payload.new;
+
+            if (newConversation.created_by === userId) {
+              setConversations((prev) => {
+                if (prev.some((conv) => conv.id === newConversation.id))
+                  return prev;
+                toast.success("New conversation added!");
+                return [
+                  { id: newConversation.id, title: newConversation.title },
+                  ...prev,
+                ];
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupRealtime();
+  }, []);
 
   return (
     <div className="w-[240px] bg-gray-50 border-r border-gray-200 flex flex-col h-screen">
@@ -107,7 +204,10 @@ const Sidebar = () => {
                     autoFocus
                   />
                 ) : (
-                  <Link href={`/chats/${conv.id}`} className="flex-1 truncate">
+                  <Link
+                    href={`/chats/${conv.id}`}
+                    className="flex-1 truncate text-sm overflow-hidden whitespace-nowrap max-w-[160px]"
+                  >
                     {conv.title}
                   </Link>
                 )}
