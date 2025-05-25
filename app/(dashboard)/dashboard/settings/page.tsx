@@ -92,6 +92,8 @@ export default function SettingsPage() {
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
 
+  console.log("Inside the setting page");
+
   // User
   useEffect(() => {
     const fetchSession = async () => {
@@ -116,8 +118,7 @@ export default function SettingsPage() {
   };
 
   const handleEditMember = (memberId: number) => {
-    setMemberToDelete(memberId);
-    setIsDeleteDialogOpen(true);
+    router.push(`/dashboard/settings/edit-member/${memberId}`);
   };
 
   const confirmDelete = () => {
@@ -226,14 +227,14 @@ export default function SettingsPage() {
                           onClick={() => handleEditMember(member.id)}
                         >
                           <Pencil className="mr-2 h-4 w-4" />
-                          Update Agent
+                          Update Member
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600 focus:text-red-600"
                           onClick={() => handleDeleteMember(member.id)}
                         >
                           <Trash className="mr-2 h-4 w-4" />
-                          Delete Agent
+                          Delete Member
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

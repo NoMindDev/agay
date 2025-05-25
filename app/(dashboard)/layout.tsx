@@ -9,15 +9,15 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  // const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/sign-in"); // Redirect to the login page if not authenticated
-  }
+  // if (!user) {
+  //   redirect("/sign-in"); // Redirect to the login page if not authenticated
+  // }
 
   return (
     <div className="flex h-screen bg-gray-50">
