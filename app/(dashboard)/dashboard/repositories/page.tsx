@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Search, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/utils/supabase/client";
+import { useUserStore } from "@/lib/store/user";
 
 // Repository files with the required naming format
 // const repositoryFiles = [
@@ -25,7 +27,14 @@ import { Input } from "@/components/ui/input";
 export default function RepositoriesPage() {
   const [repositoryFiles, setRepositoryFiles] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const user = useUserStore((state: { user: any }) => state.user);
   const saveToLog = async (file: any) => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    console.log(user, " user from store");
     const res = await fetch("/api/logs", {
       method: "POST",
       headers: {
@@ -33,9 +42,9 @@ export default function RepositoriesPage() {
       },
       body: JSON.stringify({
         // date:new Date().toISOString(),
-        user_email: "",
-        user_name: "",
-        event: "viewing file",
+        user_email: user?.email,
+        user_name: user?.user_metadata?.name,
+        event: "search",
         description: "file viewed by the user",
         resource_name: file.name,
         resource_link: file.link,
