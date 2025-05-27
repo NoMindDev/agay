@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -31,14 +31,14 @@ import {
 import { MoreHorizontal, Trash, ArrowUpDown, Pencil } from "lucide-react";
 import { useUserStore } from "@/lib/store/user";
 import { readUserSession } from "@/utils/supabase/client";
-import { readMembers } from "@/app/actions";
+import { deleteMemberById, readMembers } from "@/app/actions";
 import { MemberWithPermission } from "@/lib/type";
-import DeleteMember from "@/components/dashboard/member/DeleteMember";
 
 export default function SettingsPage() {
   const user = useUserStore((state) => state.user);
   const router = useRouter();
-  const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
+  const [isPending, startTransiton] = useTransition();
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [members, setMembers] = useState<MemberWithPermission[] | null>(null);
   const [sortConfig, setSortConfig] = useState<{
@@ -64,7 +64,6 @@ export default function SettingsPage() {
       if (error) {
         console.error("Failed to fetch members");
       } else {
-        console.log("Members fetched:", members);
         setMembers(members);
       }
     };
@@ -75,24 +74,34 @@ export default function SettingsPage() {
 
   const isAdmin = user?.user_metadata?.role === "ADMIN";
 
-  const handleDeleteMember = (memberId: number) => {
+  const handleDeleteMember = (memberId: string) => {
     setMemberToDelete(memberId);
+    console.log("Deleting member with ID:", memberId);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleEditMember = (memberId: number) => {
+  const handleEditMember = (memberId: string) => {
     router.push(`/dashboard/settings/edit-member/${memberId}`);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!members || memberToDelete === null) return;
 
-    const updatedMembers = members.filter(
-      (m) => Number(m.id) !== memberToDelete
-    );
-    setMembers(updatedMembers);
-    setIsDeleteDialogOpen(false);
-    setMemberToDelete(null);
+    startTransiton(async () => {
+      const result = JSON.parse(await deleteMemberById(memberToDelete));
+      if (result.error.message) {
+        alert(result.error.message);
+      } else {
+        const updatedMembers = members.filter((m) => {
+          console.log(m.id != memberToDelete);
+          return m.id != memberToDelete;
+        });
+        setMembers(updatedMembers);
+        setIsDeleteDialogOpen(false);
+        setMemberToDelete(null);
+        alert("Member deleted successfully.");
+      }
+    });
   };
 
   const toggleSort = (key: string) => {
@@ -198,12 +207,18 @@ export default function SettingsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-white">
                           <DropdownMenuItem
-                            onClick={() => handleEditMember(Number(member.id))}
+                            onClick={() => handleEditMember(member.id)}
                           >
                             <Pencil className="mr-2 h-4 w-4" />
                             Update Member
                           </DropdownMenuItem>
-                          <DeleteMember />
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => handleDeleteMember(member.id)}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete Member
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
