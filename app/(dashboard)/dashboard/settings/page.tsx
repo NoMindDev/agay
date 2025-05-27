@@ -31,68 +31,20 @@ import {
 import { MoreHorizontal, Trash, ArrowUpDown, Pencil } from "lucide-react";
 import { useUserStore } from "@/lib/store/user";
 import { readUserSession } from "@/utils/supabase/client";
-
-// Sample members data
-const initialMembers = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "johndoe@gmail.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "JD",
-    createdAt: "2025-04-09T18:00:00Z",
-    invitedAt: "2025-04-08T15:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Sara",
-    email: "sara@gmail.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "S",
-    createdAt: "2025-04-09T02:00:00Z",
-    invitedAt: "2025-04-08T15:00:00Z",
-  },
-  {
-    id: 3,
-    name: "Alice",
-    email: "alice@gmail.com",
-    avatar: "",
-    initials: "A",
-    createdAt: "2025-04-08T15:00:00Z",
-    invitedAt: "2025-03-04T15:00:00Z",
-  },
-  {
-    id: 4,
-    name: "Bob",
-    email: "bob@gmail.com",
-    avatar: "",
-    initials: "B",
-    createdAt: "2025-03-04T15:00:00Z",
-    invitedAt: "2025-03-04T15:00:00Z",
-  },
-  {
-    id: 5,
-    name: "Zabab",
-    email: "zabab@gmail.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "Z",
-    createdAt: "2025-02-01T15:00:00Z",
-    invitedAt: "2025-02-01T15:00:00Z",
-  },
-];
+import { readMembers } from "@/app/actions";
+import { MemberWithPermission } from "@/lib/type";
+import DeleteMember from "@/components/dashboard/member/DeleteMember";
 
 export default function SettingsPage() {
   const user = useUserStore((state) => state.user);
   const router = useRouter();
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [members, setMembers] = useState(initialMembers);
+  const [members, setMembers] = useState<MemberWithPermission[] | null>(null);
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof (typeof initialMembers)[0] | null;
+    key: string | null;
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
-
-  console.log("Inside the setting page");
 
   // User
   useEffect(() => {
@@ -107,7 +59,18 @@ export default function SettingsPage() {
       }
     };
 
+    const fetchMembers = async () => {
+      const { data: members, error } = await readMembers();
+      if (error) {
+        console.error("Failed to fetch members");
+      } else {
+        console.log("Members fetched:", members);
+        setMembers(members);
+      }
+    };
+
     fetchSession();
+    fetchMembers();
   }, []);
 
   const isAdmin = user?.user_metadata?.role === "ADMIN";
@@ -122,28 +85,46 @@ export default function SettingsPage() {
   };
 
   const confirmDelete = () => {
-    setMembers((prev) => prev.filter((m) => m.id !== memberToDelete));
+    if (!members || memberToDelete === null) return;
+
+    const updatedMembers = members.filter(
+      (m) => Number(m.id) !== memberToDelete
+    );
+    setMembers(updatedMembers);
     setIsDeleteDialogOpen(false);
     setMemberToDelete(null);
   };
 
-  const toggleSort = (key: keyof (typeof initialMembers)[0]) => {
+  const toggleSort = (key: string) => {
+    if (!members) return;
+
     let direction: "asc" | "desc" = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
     }
     setSortConfig({ key, direction });
 
-    setMembers((prev) =>
-      [...prev].sort((a, b) => {
-        const aVal = key.includes("At") ? new Date(a[key] as string) : a[key];
-        const bVal = key.includes("At") ? new Date(b[key] as string) : b[key];
+    const sortedMembers = [...members].sort((a, b) => {
+      let aVal: string | Date = "";
+      let bVal: string | Date = "";
 
-        if (aVal < bVal) return direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return direction === "asc" ? 1 : -1;
-        return 0;
-      })
-    );
+      if (key === "name") {
+        aVal = a.member.name;
+        bVal = b.member.name;
+      } else if (key === "email") {
+        aVal = a.member.email;
+        bVal = b.member.email;
+      } else if (key === "createdAt") {
+        aVal = new Date(a.member.created_at);
+        bVal = new Date(b.member.created_at);
+      }
+
+      if (aVal < bVal) return direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setMembers(sortedMembers);
   };
 
   const formatDate = (dateStr: string) =>
@@ -152,10 +133,7 @@ export default function SettingsPage() {
       timeStyle: "short",
     });
 
-  const renderHeader = (
-    label: string,
-    key: keyof (typeof initialMembers)[0]
-  ) => (
+  const renderHeader = (label: string, key: string) => (
     <TableHead
       className="cursor-pointer select-none"
       onClick={() => toggleSort(key)}
@@ -191,54 +169,45 @@ export default function SettingsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Profile</TableHead>
                 {renderHeader("Name", "name")}
                 {renderHeader("Email", "email")}
                 {renderHeader("Created At", "createdAt")}
-                <TableHead>Action</TableHead>
+                {isAdmin && <TableHead>Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.map((member) => (
+              {members?.map((member) => (
                 <TableRow key={member.id}>
-                  <TableCell>
-                    <Avatar className="h-10 w-10">
-                      {member.avatar ? (
-                        <AvatarImage src={member.avatar} alt={member.name} />
-                      ) : null}
-                      <AvatarFallback>{member.initials}</AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                  <TableCell className="text-black">{member.name}</TableCell>
-                  <TableCell className="text-black">{member.email}</TableCell>
                   <TableCell className="text-black">
-                    {formatDate(member.createdAt)}
+                    {member.member.name}
                   </TableCell>
                   <TableCell className="text-black">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-white">
-                        <DropdownMenuItem
-                          onClick={() => handleEditMember(member.id)}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Update Member
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => handleDeleteMember(member.id)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete Member
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {member.member.email}
                   </TableCell>
+                  <TableCell className="text-black">
+                    {formatDate(member.member.created_at)}
+                  </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-black">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-white">
+                          <DropdownMenuItem
+                            onClick={() => handleEditMember(Number(member.id))}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Update Member
+                          </DropdownMenuItem>
+                          <DeleteMember />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

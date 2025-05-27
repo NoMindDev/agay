@@ -6,6 +6,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseAdmin } from "@/utils/supabase/admin";
 import { readUserSession } from "@/utils/supabase/auth";
+import { unstable_noStore } from "next/cache";
+import { MemberWithPermission } from "@/lib/type";
 // Auth actions
 
 export const signUpAction = async (formData: FormData) => {
@@ -174,6 +176,7 @@ export const createMember = async (data: {
     const memberResult = await supabase.from("member").insert({
       name: data.name,
       id: createResult.data.user?.id,
+      email: data.email,
     });
 
     if (memberResult.error?.message) {
@@ -195,4 +198,12 @@ export const updateMemberById = async (FormData: FormData) => {};
 
 export const deleteMemberById = async (FormData: FormData) => {};
 
-export async function readMembers() {}
+export async function readMembers(): Promise<{
+  data: MemberWithPermission[] | null;
+  error: any;
+}> {
+  unstable_noStore();
+  const supabase = await createSupabaseAdmin();
+  return await supabase.from("permission").select("*, member(*)");
+}
+

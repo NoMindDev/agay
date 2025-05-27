@@ -2,7 +2,8 @@
 create table if not exists public.member (
   id uuid primary key default gen_random_uuid(),
   created_at timestamp with time zone default now(),
-  name text not null
+  name text not null,
+  email text not null unique
 );
 
 -- Create enums
