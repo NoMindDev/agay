@@ -20,8 +20,10 @@ export default function Login() {
     const formData = new FormData(event.currentTarget);
 
     const result = await signInAction(formData);
-
+    console.log(result, "result from signInAction");
+    // return;
     if ("success" in result) {
+      alert("Login successful!"); // Show success message
       router.push("/"); // Redirect to /protected on success
     } else {
       setMessage(result); // Set the error message
