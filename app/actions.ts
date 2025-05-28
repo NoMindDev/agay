@@ -323,3 +323,14 @@ export const updateMemberAccountById = async (
     return JSON.stringify(result);
   }
 };
+
+export const updatePasswordById = async (id: string, password: string) => {
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(id, {
+    password,
+  });
+
+  return JSON.stringify(updateResult);
+};

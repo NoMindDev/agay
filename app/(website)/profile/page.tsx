@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { createClient } from "@/utils/supabase/client";
+import { updateMemberBasicById, updatePasswordById } from "@/app/actions";
 
 export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
@@ -24,7 +26,43 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
-  const [name, setName] = useState("Kuenzang");
+
+  const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState("Name");
+
+  // User info state
+  const [user, setUser] = useState<any>(null);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setName(user.user_metadata.name || "Name");
+        setUser(user);
+      }
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  const handleChangeName = async () => {
+    // setIsSuccessDialogOpen(true);
+    startTransition(async () => {
+      const { error } = JSON.parse(await updateMemberBasicById(user.id, name));
+
+      if (error || error?.messsage) {
+        console.error("Error updating member:", error.message);
+      } else {
+        console.log("Member updated successfully:", name);
+      }
+    });
+  };
 
   const handleChangePassword = () => {
     // Reset error
@@ -42,14 +80,26 @@ export default function ProfilePage() {
     }
 
     // In a real app, you would send the new password to your API here
-    console.log("Changing password to:", newPassword);
-
+    // console.log("Changing password to:", newPassword);
     // Show success dialog
-    setIsSuccessDialogOpen(true);
+    // setIsSuccessDialogOpen(true);
 
     // Reset form
-    setNewPassword("");
-    setConfirmPassword("");
+    startTransition(async () => {
+      const { error } = JSON.parse(
+        await updatePasswordById(user?.id, newPassword)
+      );
+
+      if (error || error?.messsage) {
+        alert("Error updating member: " + error.message);
+        console.error("Error updating member:", error.message);
+      } else {
+        // Reset form
+        setNewPassword("");
+        setConfirmPassword("");
+        console.log("Member updated successfully:");
+      }
+    });
   };
 
   return (
@@ -70,9 +120,9 @@ export default function ProfilePage() {
             </AvatarFallback>
           </Avatar>
           <h2 className="text-2xl font-semibold">{name}</h2>
-          <p className="text-gray-500">
+          {/* <p className="text-gray-500">
             Joined your organization at 24/02/2025
-          </p>
+          </p> */}
         </div>
 
         <Tabs defaultValue="details" className="w-full">
@@ -91,7 +141,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">kuenzang@gmail.com</p>
+                      <p className="font-medium">{user?.email}</p>
                     </div>
                   </div>
 
@@ -101,7 +151,18 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-500">Invited at</p>
-                      <p className="font-medium">24/02/2025</p>
+                      <p className="font-medium">
+                        {user?.created_at
+                          ? new Date(user.created_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )
+                          : "N/A"}{" "}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -117,14 +178,10 @@ export default function ProfilePage() {
                     onChange={(e) => setName(e.target.value)}
                   />
                   <Button
-                    onClick={() => {
-                      // pretend to update the name
-                      console.log("Updated name to:", name);
-                      setIsSuccessDialogOpen(true);
-                    }}
+                    onClick={handleChangeName}
                     className="mt-2 bg-blue-600 hover:bg-blue-700"
                   >
-                    Save Name
+                    {isPending ? "Loading..." : "Save Name"}
                   </Button>
                 </div>
               </CardContent>
@@ -205,8 +262,14 @@ export default function ProfilePage() {
                       onClick={handleChangePassword}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
-                      <Lock className="mr-2 h-4 w-4" />
-                      Change Password
+                      {isPending ? (
+                        "Loading..."
+                      ) : (
+                        <>
+                          <Lock className="mr-2 h-4 w-4" />
+                          Change Password
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

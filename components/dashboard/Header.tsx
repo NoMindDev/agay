@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Settings, User, LogOut } from "lucide-react";
 import { signOutAction } from "@/app/actions";
+import { createClient } from "@/utils/supabase/client";
 
 // Utility function to get page title
 const getPageTitle = (pathname: string) => {
@@ -31,6 +32,24 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
+  const [name, setName] = useState("Name");
+  const [isLoading, setIsLoading] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setName(user.user_metadata.name || "Name");
+      }
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
@@ -48,7 +67,7 @@ const Header = () => {
                 />
               </div>
               <span className="text-sm font-medium text-gray-700">
-                Kuenzang
+                {isLoading ? "Loading..." : name}
               </span>
             </button>
           </DropdownMenuTrigger>
@@ -59,12 +78,12 @@ const Header = () => {
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={() => router.push("/dashboard/settings")}
             >
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator />
             <form action={signOutAction}>
               <button

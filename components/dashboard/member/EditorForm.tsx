@@ -33,10 +33,10 @@ export default function EditForm({
 
       {/* Tabs */}
       <Tabs defaultValue="basic" className="w-full space-y-5">
-        <TabsList className={cn("grid w-full", "grid-cols-3")}>
+        <TabsList className={cn("grid w-full", "grid-cols-2")}>
           <TabsTrigger value="basic">Basic</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="advance">Advance</TabsTrigger>
+          {/* <TabsTrigger value="advance">Advance</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="basic">
@@ -45,9 +45,9 @@ export default function EditForm({
         <TabsContent value="account">
           <AccountForm memberData={memberData} />
         </TabsContent>
-        <TabsContent value="advance">
+        {/* <TabsContent value="advance">
           <AdvanceForm memberData={memberData} />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

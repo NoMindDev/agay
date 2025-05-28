@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bot, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/client";
 
 const WebsiteLanding = () => {
   const [currentTime, setCurrentTime] = useState(() => {
@@ -15,11 +16,30 @@ const WebsiteLanding = () => {
     });
   });
 
+  const [name, setName] = useState("Name");
+  const [isLoading, setIsLoading] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setName(user.user_metadata.name || "Name");
+      }
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
+
   return (
     <div className="flex-1 p-6 flex flex-col items-center pt-16">
       <h1 className="text-5xl font-medium text-gray-800">{currentTime}</h1>
       <p className="text-xl text-orange-400 mt-4 mb-12">
-        Hello Kuenzang, we are glad to have you.
+        Hello {isLoading ? "Name" : name}, we are glad to have you.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl">
