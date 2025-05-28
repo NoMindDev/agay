@@ -1,0 +1,12 @@
+<html>
+
+<body>
+    <h2>Reset Password 3</h2>
+    <p>Follow this link to reset the password for your user:</p>
+    <p>
+        <a
+            href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=/protected/reset-password">ResetPassword</a>
+    </p>
+</body>
+
+</html>

@@ -72,9 +72,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     return encodedRedirect("error", "/forgot-password", "Email is required");
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
     console.error(error.message);
@@ -97,7 +95,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = await createClient();
+  const supabase = await createSupabaseAdmin();
 
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
@@ -121,6 +119,8 @@ export const resetPasswordAction = async (formData: FormData) => {
   const { error } = await supabase.auth.updateUser({
     password: password,
   });
+
+  console.log("Reset Password Error: ", error);
 
   if (error) {
     encodedRedirect(
