@@ -49,7 +49,7 @@ export default function BasicForm({
         await updateMemberBasicById(memberData.member.id, data.name)
       );
 
-      if (error || error.messsage) {
+      if (error || error?.messsage) {
         console.error("Error updating member:", error.message);
       } else {
         console.log("Member updated successfully:", data.name);

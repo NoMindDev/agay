@@ -227,11 +227,99 @@ export const deleteMemberById = async (user_id: string) => {
 };
 
 export const updateMemberBasicById = async (id: string, data: string) => {
-  const supabase = await createClient();
-  const result = await supabase
-    .from("member")
-    .update({ name: data })
-    .eq("id", id);
-  revalidatePath("/dashboard/settings");
-  return JSON.stringify(result);
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(id, {
+    user_metadata: { name: data },
+  });
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase
+      .from("member")
+      .update({ name: data })
+      .eq("id", id);
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
+};
+
+export const updateMemberAdvanceById = async (
+  id: string,
+  data: {
+    role: "ADMIN" | "USER";
+    status: "ACTIVE" | "RESIGNED";
+  }
+) => {
+  // Authorization
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
+
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(id, {
+    user_metadata: { role: data.role },
+  });
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase
+      .from("permission")
+      .update(data)
+      .eq("member_id", id);
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
+};
+
+export const updateMemberAccountById = async (
+  id: string,
+  data: { password: string | undefined; email: string }
+) => {
+  // Authorization
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
+
+  let updateObject: { email: string; password?: string } = {
+    email: data.email,
+  };
+
+  if (data.password) {
+    updateObject["password"] = data.password;
+  }
+
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(
+    id,
+    updateObject
+  );
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase
+      .from("member")
+      .update({ email: data.email })
+      .eq("id", id);
+
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
 };
