@@ -8,9 +8,17 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { MemberWithPermission } from "@/lib/type";
 
-export default function EditForm({ memberId }: { memberId: string }) {
+export default function EditForm({
+  memberId,
+  memberData,
+}: {
+  memberId: string;
+  memberData: MemberWithPermission | null;
+}) {
   const router = useRouter();
+  console.log(memberData);
   return (
     <div className="space-y-5 w-full">
       {/* Back Button */}
@@ -32,13 +40,13 @@ export default function EditForm({ memberId }: { memberId: string }) {
         </TabsList>
 
         <TabsContent value="basic">
-          <BasicForm />
+          <BasicForm memberData={memberData} />
         </TabsContent>
         <TabsContent value="account">
-          <AccountForm />
+          <AccountForm memberData={memberData} />
         </TabsContent>
         <TabsContent value="advance">
-          <AdvanceForm />
+          <AdvanceForm memberData={memberData} />
         </TabsContent>
       </Tabs>
     </div>

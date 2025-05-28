@@ -24,21 +24,26 @@ import {
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MemberWithPermission } from "@/lib/type";
 
 const FormSchema = z.object({
-  role: z.enum(["admin", "user"]),
-  status: z.enum(["active", "resigned"]),
+  role: z.enum(["ADMIN", "USER"]),
+  status: z.enum(["ACTIVE", "RESIGNED"]),
 });
 
-export default function AdvanceForm() {
-  const roles = ["admin", "user"];
-  const status = ["active", "resigned"];
+export default function AdvanceForm({
+  memberData,
+}: {
+  memberData: MemberWithPermission | null;
+}) {
+  const roles = ["ADMIN", "USER"];
+  const status = ["ACTIVE", "RESIGNED"];
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      role: "user",
-      status: "active",
+      role: memberData?.role,
+      status: memberData?.status,
     },
   });
 

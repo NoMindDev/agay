@@ -203,8 +203,6 @@ export async function readMembers(): Promise<{
   return await supabase.from("permission").select("*, member(*)");
 }
 
-export const updateMemberById = async (user_id: string) => {};
-
 export const deleteMemberById = async (user_id: string) => {
   // Authorization // Admin Only
   const { data: userSession } = await readUserSession();
@@ -226,4 +224,14 @@ export const deleteMemberById = async (user_id: string) => {
     revalidatePath("/dashboard/settings");
     return JSON.stringify(result);
   }
+};
+
+export const updateMemberBasicById = async (id: string, data: string) => {
+  const supabase = await createClient();
+  const result = await supabase
+    .from("member")
+    .update({ name: data })
+    .eq("id", id);
+  revalidatePath("/dashboard/settings");
+  return JSON.stringify(result);
 };

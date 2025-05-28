@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
+import { MemberWithPermission } from "@/lib/type";
 
 const FormSchema = z
   .object({
@@ -28,11 +29,15 @@ const FormSchema = z
     path: ["confirm"],
   });
 
-export default function AccountForm() {
+export default function AccountForm({
+  memberData,
+}: {
+  memberData: MemberWithPermission | null;
+}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      email: "",
+      email: memberData?.member?.email || "",
       password: "",
       confirm: "",
     },
