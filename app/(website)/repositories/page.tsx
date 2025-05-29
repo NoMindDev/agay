@@ -58,6 +58,7 @@ export default function RepositoriesPage() {
     });
     const data = await res.json();
     console.log(data, " data from logs");
+    window.open(file.link, "_blank");
   };
   const [searchQuery, setSearchQuery] = useState("");
 
