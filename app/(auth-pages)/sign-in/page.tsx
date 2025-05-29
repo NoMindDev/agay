@@ -10,6 +10,7 @@ import Image from "next/image";
 import { SubmitButton } from "@/components/submit-button";
 import { signInAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
+import { toast } from "sonner";
 
 export default function Login() {
   const [message, setMessage] = useState<Message | null>(null);
@@ -20,13 +21,14 @@ export default function Login() {
     const formData = new FormData(event.currentTarget);
 
     const result = await signInAction(formData);
-    console.log(result, "result from signInAction");
-    // return;
     if ("success" in result) {
-      alert("Login successful!"); // Show success message
-      router.push("/"); // Redirect to /protected on success
+      toast.success("Login successful!");
+      router.push("/");
     } else {
-      setMessage(result); // Set the error message
+      toast.error("Login failed", {
+        description: result.error || "Invalid credentials",
+      });
+      setMessage(result);
     }
   };
 

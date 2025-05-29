@@ -84,7 +84,7 @@ export default function ConversationPage({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: combinedQuestion }),
+        body: JSON.stringify({ question: combinedQuestion }), // Change it from here
       });
 
       if (!response.ok) {

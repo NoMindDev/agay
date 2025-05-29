@@ -5,27 +5,12 @@ import Image from "next/image";
 import { Search, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-// Repository files with the required naming format
-// const repositoryFiles = [
-//   { name: "1967-10-06-01.pdf" },
-//   { name: "1967-10-06-02.pdf" },
-//   { name: "1968-02-14-01.pdf" },
-//   { name: "1970-07-21-01.pdf" },
-//   { name: "1971-03-15-02.pdf" },
-//   { name: "1980-01-01-01.pdf" },
-//   { name: "1999-12-31-01.pdf" },
-//   { name: "2024-04-01-01.pdf" },
-// ].map((file) => ({
-//   ...file,
-//   type: "pdf",
-//   icon: <FileText className="h-5 w-5 text-white" />,
-//   thumbnail: "/placeholder.jpeg?height=200&width=150",
-// }));
-
 export default function RepositoriesPage() {
   const [repositoryFiles, setRepositoryFiles] = useState<any[]>([]);
+  const [isLoading, setisLoading] = useState(false);
   useEffect(() => {
     const fetchFiles = async () => {
+      setisLoading(true);
       const res = await fetch("/api/files");
       const files = await res.json();
       console.log(files, " data from api");
@@ -36,6 +21,7 @@ export default function RepositoriesPage() {
         thumbnail: "/placeholder.jpeg?height=200&width=150",
       }));
       setRepositoryFiles(repoFiles);
+      setisLoading(false);
     };
     fetchFiles();
   }, []);
@@ -65,6 +51,7 @@ export default function RepositoriesPage() {
   const filteredFiles = repositoryFiles.filter((file) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   console.log(filteredFiles, " filtered files", searchQuery);
 
   return (
@@ -82,48 +69,52 @@ export default function RepositoriesPage() {
         </div>
 
         {/* Files Section */}
-        <div>
-          <h2 className="text-lg font-medium mb-4">Files</h2>
-          {filteredFiles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredFiles.map((file, index) => (
-                <a
-                  key={index}
-                  href={file.link} // Adjust this path if files are stored elsewhere
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    saveToLog(file);
-                  }}
-                >
-                  <div className="bg-white rounded-md overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
-                    <div className="relative">
-                      <div className="absolute top-2 left-2 bg-red-500 rounded p-1">
-                        <FileText className="h-4 w-4 text-white" />
+        {isLoading ? (
+          "Loading files..."
+        ) : (
+          <div>
+            <h2 className="text-lg font-medium mb-4">Files</h2>
+            {filteredFiles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredFiles.map((file, index) => (
+                  <a
+                    key={index}
+                    href={file.link} // Adjust this path if files are stored elsewhere
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      saveToLog(file);
+                    }}
+                  >
+                    <div className="bg-white rounded-md overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
+                      <div className="relative">
+                        <div className="absolute top-2 left-2 bg-red-500 rounded p-1">
+                          <FileText className="h-4 w-4 text-white" />
+                        </div>
+                        <Image
+                          src={file.thumbnail}
+                          alt={file.name}
+                          width={150}
+                          height={200}
+                          className="w-full h-40 object-cover"
+                        />
                       </div>
-                      <Image
-                        src={file.thumbnail}
-                        alt={file.name}
-                        width={150}
-                        height={200}
-                        className="w-full h-40 object-cover"
-                      />
+                      <div className="p-3">
+                        <p className="text-sm font-medium truncate text-black">
+                          {file.name}
+                        </p>
+                      </div>
                     </div>
-                    <div className="p-3">
-                      <p className="text-sm font-medium truncate text-black">
-                        {file.name}
-                      </p>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No files found.</p>
-          )}
-        </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No files found.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
