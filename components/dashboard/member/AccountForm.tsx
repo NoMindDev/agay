@@ -16,6 +16,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
+import { MemberWithPermission } from "@/lib/type";
+import { useTransition } from "react";
+import { updateMemberAccountById } from "@/app/actions";
 
 const FormSchema = z
   .object({
@@ -28,24 +31,42 @@ const FormSchema = z
     path: ["confirm"],
   });
 
-export default function AccountForm() {
+export default function AccountForm({
+  memberData,
+}: {
+  memberData: MemberWithPermission | null;
+}) {
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      email: "",
+      email: memberData?.member?.email || "",
       password: "",
       confirm: "",
     },
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      duration: 5000,
+    if (!memberData?.member?.id) {
+      console.log("Member ID is not available");
+      return;
+    }
+
+    startTransition(async () => {
+      const { error } = JSON.parse(
+        await updateMemberAccountById(memberData.member.id, {
+          password: data.password,
+          email: data.email,
+        })
+      );
+
+      if (error || error?.messsage) {
+        alert("Error updating member: " + error.message);
+        console.error("Error updating member:", error.message);
+      } else {
+        console.log("Member updated successfully:", data);
+      }
     });
   }
 
@@ -109,8 +130,14 @@ export default function AccountForm() {
           className="flex gap-2 items-center w-full"
           variant="outline"
         >
-          Update
-          <Pencil className="w-4 h-4" />
+          {isPending ? (
+            "Loading..."
+          ) : (
+            <>
+              Update
+              <Pencil className="w-4 h-4" />
+            </>
+          )}
         </Button>
       </form>
     </Form>

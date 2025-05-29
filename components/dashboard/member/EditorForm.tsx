@@ -8,9 +8,17 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { MemberWithPermission } from "@/lib/type";
 
-export default function EditForm({ memberId }: { memberId: string }) {
+export default function EditForm({
+  memberId,
+  memberData,
+}: {
+  memberId: string;
+  memberData: MemberWithPermission | null;
+}) {
   const router = useRouter();
+  console.log(memberData);
   return (
     <div className="space-y-5 w-full">
       {/* Back Button */}
@@ -25,21 +33,21 @@ export default function EditForm({ memberId }: { memberId: string }) {
 
       {/* Tabs */}
       <Tabs defaultValue="basic" className="w-full space-y-5">
-        <TabsList className={cn("grid w-full", "grid-cols-3")}>
+        <TabsList className={cn("grid w-full", "grid-cols-2")}>
           <TabsTrigger value="basic">Basic</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="advance">Advance</TabsTrigger>
+          {/* <TabsTrigger value="advance">Advance</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="basic">
-          <BasicForm />
+          <BasicForm memberData={memberData} />
         </TabsContent>
         <TabsContent value="account">
-          <AccountForm />
+          <AccountForm memberData={memberData} />
         </TabsContent>
-        <TabsContent value="advance">
-          <AdvanceForm />
-        </TabsContent>
+        {/* <TabsContent value="advance">
+          <AdvanceForm memberData={memberData} />
+        </TabsContent> */}
       </Tabs>
     </div>
   );

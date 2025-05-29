@@ -1,106 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
+import TraceViewer from "@/lib/trace_utils";
 
-const chatMessages = [
-  {
-    id: 1,
-    sender: "bot",
-    message: "Hello there what can I help you with",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 2,
-    sender: "user",
-    message: "Ask me anything about your old documents",
-    timestamp: new Date(),
-  },
-  {
-    id: 3,
-    sender: "bot",
-    message: "Sure! Do you have any specific document in mind?",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 4,
-    sender: "user",
-    message: "I have a file about my previous project proposal.",
-    timestamp: new Date(),
-  },
-  {
-    id: 5,
-    sender: "bot",
-    message:
-      "Great! Could you please upload the file so I can assist you further?",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 6,
-    sender: "user",
-    message: "Here is the file. I need help with reviewing the contents.",
-    timestamp: new Date(),
-  },
-  {
-    id: 7,
-    sender: "bot",
-    message: "I will analyze the file and provide feedback shortly.",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 8,
-    sender: "user",
-    message: "Thank you! Let me know if you need more information.",
-    timestamp: new Date(),
-  },
-  {
-    id: 9,
-    sender: "bot",
-    message: "You're welcome! I'll be in touch once the review is complete.",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 10,
-    sender: "user",
-    message: "I appreciate your help! Looking forward to the feedback.",
-    timestamp: new Date(),
-  },
-  {
-    id: 11,
-    sender: "bot",
-    message:
-      "This is a very long message to test the scrolling functionality of the chat message area. Let's see if it works as expected when the content overflows the container. We will add more and more text to make sure the scrollbar appears and the header remains fixed at the top.",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 12,
-    sender: "user",
-    message: "Okay, I understand. Let's see how it behaves with a lot of text.",
-    timestamp: new Date(),
-  },
-  {
-    id: 13,
-    sender: "bot",
-    message:
-      "Adding even more text now to really push the limits of the scrolling container. We need to ensure that the user experience remains smooth even with extensive chat history.",
-    timestamp: new Date(),
-    avatar: "/nlcs-logo.png",
-  },
-  {
-    id: 14,
-    sender: "user",
-    message:
-      "Looks like it's working! The header is staying fixed and the messages are scrollable.",
-    timestamp: new Date(),
-  },
-];
+type Message = {
+  id: string;
+  content: string;
+  sender: "user" | "bot";
+  timestamp: Date;
+  trace?: string | null;
+};
 
-import { use } from "react";
+import { use, useEffect, useRef, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function ChatViewPage({
   params,
@@ -109,70 +24,159 @@ export default function ChatViewPage({
 }) {
   const unwrappedParams = use(params); // Unwrap the Promise to access `id`
   const { id } = unwrappedParams;
+  const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isNameLoading, setIsNameLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [username, setUsername] = useState<string | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchMessages = async () => {
+      setIsLoading(true);
+
+      const { data, error } = await supabase
+        .from("messages")
+        .select("id, content, sender, created_at, trace")
+        .eq("conversation_id", id)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        setIsLoading(false);
+        return;
+      }
+
+      const mappedMessages = data.map((msg) => ({
+        id: msg.id,
+        content: msg.content,
+        sender: msg.sender.toLowerCase(),
+        timestamp: new Date(msg.created_at),
+        trace: msg.trace || null,
+      }));
+
+      setMessages(mappedMessages);
+      setIsLoading(false);
+    };
+
+    const fetchConversation = async () => {
+      setIsNameLoading(true);
+      const { data, error: convError } = await supabase
+        .from("conversations")
+        .select("created_by")
+        .eq("id", id)
+        .single();
+
+      if (convError) {
+        console.error("Error fetching conversations:", convError);
+        setIsNameLoading(false);
+        return;
+      }
+
+      const { data: member, error: memberError } = await supabase
+        .from("member")
+        .select("id, name")
+        .eq("id", data.created_by)
+        .single();
+
+      if (memberError) {
+        console.error("Error fetching member names:", memberError);
+        setIsNameLoading(false);
+        return;
+      }
+
+      setUsername(member.name);
+      setIsNameLoading(false);
+    };
+
+    fetchMessages();
+    fetchConversation();
+  }, [id]);
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
   return (
     <>
       {/* Chat Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 className="font-medium text-black">John Doe</h2>{" "}
+        {isNameLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-10 w-10 shrink-0">
+              <AvatarFallback>{getInitials(username)}</AvatarFallback>
+            </Avatar>
+            <h2 className="font-medium text-black">
+              {username || "User Name"}
+            </h2>
+          </div>
+        )}
+
         {/* Keep name here */}
-        <Image
+        {/* <Image
           src="/nlcs-logo.png"
           alt="User"
           width={32}
           height={32}
           className="rounded-full"
-        />
+        /> */}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="space-y-6">
-          {chatMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex items-end gap-2 ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              {/* Bot Avatar (left) */}
-              {message.sender === "bot" && message.avatar && (
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-                  <Image
-                    src={message.avatar}
-                    alt="Bot"
-                    width={32}
-                    height={32}
-                  />
-                </div>
-              )}
-
-              {/* Message Bubble */}
+      <ScrollArea className="flex-1 p-6 overflow-auto" ref={scrollAreaRef}>
+        {isLoading ? (
+          <div>Loading</div>
+        ) : (
+          <div className="max-w-3xl mx-auto px-4 flex flex-col space-y-4 pb-4">
+            {messages.map((message) => (
               <div
-                className={`max-w-[70%] rounded-lg p-3 text-sm ${
-                  message.sender === "user"
-                    ? "bg-gray-100 text-gray-800"
-                    : "bg-blue-500 text-white"
-                }`}
+                key={message.id}
+                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
               >
-                {message.message}
-              </div>
-
-              {/* User Avatar (right) */}
-              {message.sender === "user" && message.avatar && (
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-                  <Image
-                    src={message.avatar}
-                    alt="User"
-                    width={32}
-                    height={32}
-                  />
+                <div
+                  className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  {message.sender === "bot" && (
+                    <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 mr-2">
+                      <Image
+                        src="/nlcs-logo.png?height=32&width=32"
+                        alt="Bot avatar"
+                        width={32}
+                        height={32}
+                      />
+                    </div>
+                  )}
+                  <div
+                    className={`p-3 rounded-lg ${
+                      message.sender === "user"
+                        ? "bg-blue-500 text-white rounded-tr-none"
+                        : "bg-gray-100 text-gray-800 rounded-tl-none"
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap">
+                      {message.content}
+                      {message.trace && (
+                        <>
+                          <TraceViewer trace={message.trace} />
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
     </>
   );
 }

@@ -6,6 +6,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseAdmin } from "@/utils/supabase/admin";
 import { readUserSession } from "@/utils/supabase/auth";
+import { revalidatePath, unstable_noStore } from "next/cache";
+import { MemberWithPermission } from "@/lib/type";
 // Auth actions
 
 export const signUpAction = async (formData: FormData) => {
@@ -70,9 +72,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     return encodedRedirect("error", "/forgot-password", "Email is required");
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
     console.error(error.message);
@@ -95,7 +95,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = await createClient();
+  const supabase = await createSupabaseAdmin();
 
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
@@ -119,6 +119,8 @@ export const resetPasswordAction = async (formData: FormData) => {
   const { error } = await supabase.auth.updateUser({
     password: password,
   });
+
+  console.log("Reset Password Error: ", error);
 
   if (error) {
     encodedRedirect(
@@ -174,6 +176,7 @@ export const createMember = async (data: {
     const memberResult = await supabase.from("member").insert({
       name: data.name,
       id: createResult.data.user?.id,
+      email: data.email,
     });
 
     if (memberResult.error?.message) {
@@ -185,14 +188,149 @@ export const createMember = async (data: {
         member_id: createResult.data.user?.id,
         status: data.status,
       });
-
+      revalidatePath("/dashboard/settings");
       return JSON.stringify(permissionResult);
     }
   }
 };
 
-export const updateMemberById = async (FormData: FormData) => {};
+export async function readMembers(): Promise<{
+  data: MemberWithPermission[] | null;
+  error: any;
+}> {
+  unstable_noStore();
+  const supabase = await createSupabaseAdmin();
+  return await supabase.from("permission").select("*, member(*)");
+}
 
-export const deleteMemberById = async (FormData: FormData) => {};
+export const deleteMemberById = async (user_id: string) => {
+  // Authorization // Admin Only
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
 
-export async function readMembers() {}
+  // delete account
+  const supabase = await createSupabaseAdmin();
+  const deleteResult = await supabase.auth.admin.deleteUser(user_id);
+
+  if (deleteResult.error?.message) {
+    return JSON.stringify(deleteResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase.from("member").delete().eq("id", user_id);
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
+};
+
+export const updateMemberBasicById = async (id: string, data: string) => {
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(id, {
+    user_metadata: { name: data },
+  });
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase
+      .from("member")
+      .update({ name: data })
+      .eq("id", id);
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
+};
+
+export const updateMemberAdvanceById = async (
+  id: string,
+  data: {
+    role: "ADMIN" | "USER";
+    status: "ACTIVE" | "RESIGNED";
+  }
+) => {
+  // Authorization
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
+
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(id, {
+    user_metadata: { role: data.role },
+  });
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase
+      .from("permission")
+      .update(data)
+      .eq("member_id", id);
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
+};
+
+export const updateMemberAccountById = async (
+  id: string,
+  data: { password: string | undefined; email: string }
+) => {
+  // Authorization
+  const { data: userSession } = await readUserSession();
+  if (userSession.session?.user.user_metadata.role !== "ADMIN") {
+    return JSON.stringify({
+      error: { message: "You are not allowed to do this!" },
+    });
+  }
+
+  let updateObject: { email: string; password?: string } = {
+    email: data.email,
+  };
+
+  if (data.password) {
+    updateObject["password"] = data.password;
+  }
+
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(
+    id,
+    updateObject
+  );
+
+  if (updateResult.error?.message) {
+    return JSON.stringify(updateResult);
+  } else {
+    const supabase = await createClient();
+    const result = await supabase
+      .from("member")
+      .update({ email: data.email })
+      .eq("id", id);
+
+    revalidatePath("/dashboard/settings");
+    return JSON.stringify(result);
+  }
+};
+
+export const updatePasswordById = async (id: string, password: string) => {
+  const supabaseAdmin = await createSupabaseAdmin();
+
+  // Create account
+  const updateResult = await supabaseAdmin.auth.admin.updateUserById(id, {
+    password,
+  });
+
+  return JSON.stringify(updateResult);
+};

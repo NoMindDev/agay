@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +14,29 @@ import { User, Settings, LogOut } from "lucide-react";
 import Link from "next/link"; // Import Link from Next.js
 import { usePathname, useRouter } from "next/navigation";
 import { signOutAction } from "@/app/actions";
+import { createClient } from "@/utils/supabase/client";
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const [name, setName] = useState("Name");
+  const [isLoading, setIsLoading] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setName(user.user_metadata.name || "Name");
+      }
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, []);
 
   const getTitle = () => {
     if (pathname === "/") return "Home";
@@ -27,20 +46,24 @@ const Header = () => {
     if (pathname.startsWith("/setting")) return "Setting";
     return "Home";
   };
-
   return (
     <div className="h-16 border-b border-gray-200 flex items-center px-6">
       <h1 className="text-xl text-gray-700">{getTitle()}</h1>
       <div className="ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-8 w-8 rounded-full bg-orange-100 overflow-hidden focus:outline-none focus:ring-2 focus:ring-orange-300">
-              <Image
-                src="/nlcs-logo.png"
-                alt="User avatar"
-                width={32}
-                height={32}
-              />
+            <button className="flex items-center gap-2 rounded-full hover:bg-gray-100 p-1 transition-colors">
+              <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden">
+                <Image
+                  src="/nlcs-logo.png"
+                  alt="User avatar"
+                  width={32}
+                  height={32}
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                {isLoading ? "Loading..." : name}
+              </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

@@ -24,32 +24,51 @@ import {
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MemberWithPermission } from "@/lib/type";
+import { updateMemberAdvanceById } from "@/app/actions";
+import { useTransition } from "react";
 
 const FormSchema = z.object({
-  role: z.enum(["admin", "user"]),
-  status: z.enum(["active", "resigned"]),
+  role: z.enum(["ADMIN", "USER"]),
+  status: z.enum(["ACTIVE", "RESIGNED"]),
 });
 
-export default function AdvanceForm() {
-  const roles = ["admin", "user"];
-  const status = ["active", "resigned"];
+export default function AdvanceForm({
+  memberData,
+}: {
+  memberData: MemberWithPermission | null;
+}) {
+  const roles = ["ADMIN", "USER"];
+  const status = ["ACTIVE", "RESIGNED"];
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      role: "user",
-      status: "active",
+      role: memberData?.role,
+      status: memberData?.status,
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast.success("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      duration: 4000,
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (!memberData?.member?.id) {
+      console.log("Member ID is not available");
+      return;
+    }
+
+    startTransition(async () => {
+      const { error } = JSON.parse(
+        await updateMemberAdvanceById(memberData.member.id, {
+          role: data.role,
+          status: data.status,
+        })
+      );
+
+      if (error || error?.messsage) {
+        console.error("Error updating member:", error.message);
+      } else {
+        console.log("Member updated successfully:", data);
+      }
     });
   }
 

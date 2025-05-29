@@ -70,6 +70,13 @@ export default function ConversationPage({
     };
     setMessages((prev) => [...prev, loadingMessage]);
 
+    // Payload for the bot request
+    const context = messages
+      .map((msg) => `${msg.sender === "user" ? "User" : "Bot"}: ${msg.content}`)
+      .join(" ");
+
+    const combinedQuestion = `${context} User: ${inputValue}`;
+
     // Send the message to the bot
     try {
       const response = await fetch("https://nlcs-rag.onrender.com/ask", {
@@ -77,7 +84,7 @@ export default function ConversationPage({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: inputValue }),
+        body: JSON.stringify({ question: combinedQuestion }),
       });
 
       if (!response.ok) {

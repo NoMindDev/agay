@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,67 +16,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import type { DateRange } from "react-day-picker";
 
-const conversations = [
-  {
-    id: 1,
-    user: { name: "John Doe", avatar: "/placeholder.svg", initials: "JD" },
-    lastMessage: "Get the related documents to Thram 1",
-    timestamp: "2min ago",
-    date: new Date(2025, 3, 9), // April 9, 2025
-  },
-  {
-    id: 2,
-    user: { name: "Emily", avatar: "", initials: "E" },
-    lastMessage: "Are you ok?",
-    timestamp: "Yesterday",
-    date: new Date(2025, 3, 8), // April 8, 2025
-  },
-  {
-    id: 3,
-    user: { name: "Sara", avatar: "/placeholder.svg", initials: "S" },
-    lastMessage: "Let's meet tomorrow for the project discussion",
-    timestamp: "2 days ago",
-    date: new Date(2025, 3, 7), // April 7, 2025
-  },
-  {
-    id: 4,
-    user: { name: "Alice", avatar: "/placeholder.svg", initials: "A" },
-    lastMessage: "Please send the updated files.",
-    timestamp: "3 days ago",
-    date: new Date(2025, 3, 6), // April 6, 2025
-  },
-  {
-    id: 5,
-    user: { name: "Bob", avatar: "", initials: "B" },
-    lastMessage: "Can you provide the status report?",
-    timestamp: "Last week",
-    date: new Date(2025, 2, 30), // March 30, 2025
-  },
-  {
-    id: 6,
-    user: { name: "Charlie", avatar: "/placeholder.svg", initials: "C" },
-    lastMessage: "Let's catch up soon!",
-    timestamp: "2 weeks ago",
-    date: new Date(2025, 2, 25), // March 25, 2025
-  },
-  {
-    id: 7,
-    user: { name: "David", avatar: "", initials: "D" },
-    lastMessage: "I'll send you the details later.",
-    timestamp: "3 weeks ago",
-    date: new Date(2025, 2, 18), // March 18, 2025
-  },
-  {
-    id: 8,
-    user: { name: "Ella", avatar: "/placeholder.svg", initials: "E" },
-    lastMessage: "Looking forward to the meeting.",
-    timestamp: "Last month",
-    date: new Date(2025, 1, 28), // February 28, 2025
-  },
-];
+interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+  created_by: string | null;
+  name: string;
+  initials: string;
+  lastMessage: string;
+  messageTimestamp: string;
+}
 
 export default function ChatLayout({
   children,
@@ -79,28 +34,118 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const supabase = createClient();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<
-    number | null
-  >(null); // Track selected conversation
+    string | null
+  >(null);
 
   const today = new Date();
 
+  useEffect(() => {
+    const fetchConversationsWithExtras = async () => {
+      // 1. Fetch all conversations
+      const { data: conversations, error: convError } = await supabase
+        .from("conversations")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (convError) {
+        console.error("Error fetching conversations:", convError);
+        return;
+      }
+
+      // 2. Fetch the creator names from members table
+      const userIds = Array.from(
+        new Set(conversations.map((conv) => conv.created_by))
+      );
+
+      const { data: members, error: memberError } = await supabase
+        .from("member")
+        .select("id, name")
+        .in("id", userIds);
+
+      if (memberError) {
+        console.error("Error fetching member names:", memberError);
+        return;
+      }
+
+      // 3. Fetch the last message for each conversation
+      const lastMessagesPromises = conversations.map(async (conv) => {
+        const { data: messages, error: msgError } = await supabase
+          .from("messages")
+          .select("content, created_at")
+          .eq("conversation_id", conv.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (msgError && msgError.code !== "PGRST116") {
+          console.error("Error fetching message:", msgError);
+        }
+
+        return {
+          conversationId: conv.id,
+          lastMessage: messages?.content || "",
+          messageTimestamp: messages?.created_at || null,
+        };
+      });
+
+      const lastMessages = await Promise.all(lastMessagesPromises);
+
+      // 4. Merge everything into one enriched conversation object
+      const enriched = conversations.map((conv) => {
+        const member = members.find((m) => m.id === conv.created_by);
+        const message = lastMessages.find((m) => m.conversationId === conv.id);
+
+        return {
+          ...conv,
+          name: member?.name || "Unknown",
+          initials: member?.name
+            ? member.name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .toUpperCase()
+            : "U",
+          lastMessage: message?.lastMessage || "",
+          messageTimestamp: message?.messageTimestamp || "",
+        };
+      });
+
+      setConversations(enriched);
+    };
+
+    fetchConversationsWithExtras();
+  }, []);
+
   const filteredConversations = conversations.filter((conv) => {
+    const convDate = new Date(conv.created_at);
+
     if (!dateRange?.from || !dateRange?.to) return true;
-    return conv.date >= dateRange.from && conv.date <= dateRange.to;
+
+    // Strip time from 'from' date and set 'to' date to end of day
+    const fromDate = new Date(dateRange.from);
+    fromDate.setHours(0, 0, 0, 0);
+
+    const toDate = new Date(dateRange.to);
+    toDate.setHours(23, 59, 59, 999);
+
+    return convDate >= fromDate && convDate <= toDate;
   });
 
-  const handleConversationClick = (id: number) => {
-    setSelectedConversationId(id); // Update selected conversation
+  const handleConversationClick = (id: string) => {
+    setSelectedConversationId(id);
     router.push(`/dashboard/conversations/${id}`);
   };
 
   return (
     <div className="flex h-full">
       {/* Sidebar */}
-      <div className="w-full md:w-[37%] border-r border-gray-200 bg-gray-50 flex flex-col">
+      <div className="w-full md:max-w-sm border-r border-gray-200 bg-gray-50 flex flex-col">
+        {/* Filter */}
         <div className="p-3 border-b border-gray-200 bg-white">
           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
             <PopoverTrigger asChild>
@@ -122,9 +167,9 @@ export default function ChatLayout({
                 toDate={today}
                 selected={dateRange}
                 onSelect={(range) => {
-                  setDateRange(range); // Allow partial selection
+                  setDateRange(range);
                   if (range?.from && range?.to) {
-                    setIsCalendarOpen(false); // Close only when both are selected
+                    setIsCalendarOpen(false);
                   }
                 }}
                 numberOfMonths={2}
@@ -134,46 +179,47 @@ export default function ChatLayout({
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-auto">
-          {filteredConversations.map((conversation) => (
-            <div
-              key={conversation.id}
-              onClick={() => handleConversationClick(conversation.id)}
-              className={`flex items-start gap-3 p-4 cursor-pointer border-b border-gray-200 ${
-                selectedConversationId === conversation.id
-                  ? "bg-blue-100" // Highlight selected conversation
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <Avatar className="h-10 w-10 shrink-0">
-                {conversation.user.avatar && (
-                  <AvatarImage
-                    src={conversation.user.avatar}
-                    alt={conversation.user.name}
-                  />
-                )}
-                <AvatarFallback>{conversation.user.initials}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium text-sm text-gray-500">
-                    {conversation.user.name}
-                  </h3>
-                  <span className="text-xs text-gray-500">
-                    {conversation.timestamp}
-                  </span>
+        <div className="flex-1 overflow-auto w-full">
+          <div className="max-h-full overflow-y-auto">
+            {filteredConversations.map((conversation) => (
+              <div
+                key={conversation.id}
+                onClick={() => handleConversationClick(conversation.id)}
+                className={`flex items-start gap-3 p-4 cursor-pointer border-b border-gray-200 ${
+                  selectedConversationId === conversation.id
+                    ? "bg-blue-100"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarFallback>{conversation.initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium text-sm text-gray-500">
+                      {conversation.name}
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      {conversation.messageTimestamp
+                        ? format(
+                            new Date(conversation.messageTimestamp),
+                            "MMM d"
+                          )
+                        : ""}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 truncate whitespace-nowrap overflow-hidden">
+                    {conversation.lastMessage || "No messages yet"}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600 truncate">
-                  {conversation.lastMessage}
-                </p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="w-[63%] hidden md:flex flex-col">{children}</div>
+      <div className="flex-1 hidden md:flex flex-col">{children}</div>
     </div>
   );
 }

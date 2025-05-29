@@ -45,7 +45,12 @@ export const updateSession = async (request: NextRequest) => {
     //   return NextResponse.redirect(new URL("/sign-in", request.url));
     // }
 
-    const PUBLIC_ROUTES = ["/sign-in", "/forgot-password"];
+    const PUBLIC_ROUTES = [
+      "/sign-in",
+      "/forgot-password",
+      "/auth/callback",
+      "/protected",
+    ];
     const pathname = request.nextUrl.pathname;
 
     // Allow public routes without auth

@@ -14,9 +14,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { Pencil } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { MemberWithPermission } from "@/lib/type";
+import { updateMemberBasicById } from "@/app/actions";
+import { useTransition } from "react";
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -24,21 +25,35 @@ const FormSchema = z.object({
   }),
 });
 
-export default function BasicForm() {
+export default function BasicForm({
+  memberData,
+}: {
+  memberData: MemberWithPermission | null;
+}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: "",
+      name: memberData?.member?.name || "",
     },
   });
+  const [isPending, startTransition] = useTransition();
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast.success("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (!memberData?.member?.id) {
+      console.log("Member ID is not available");
+      return;
+    }
+
+    startTransition(async () => {
+      const { error } = JSON.parse(
+        await updateMemberBasicById(memberData.member.id, data.name)
+      );
+
+      if (error || error?.messsage) {
+        console.error("Error updating member:", error.message);
+      } else {
+        console.log("Member updated successfully:", data.name);
+      }
     });
   }
 
