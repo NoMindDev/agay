@@ -157,7 +157,7 @@ export default function InviteAgentPage() {
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
@@ -183,9 +183,9 @@ export default function InviteAgentPage() {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
@@ -214,7 +214,7 @@ export default function InviteAgentPage() {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <div className="w-full flex items-center justify-between gap-4">
               <Button
