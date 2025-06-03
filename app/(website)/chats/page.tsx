@@ -59,7 +59,10 @@ export default function ConversationPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: inputValue }),
+        body: JSON.stringify({
+          question: inputValue,
+          session_id: conversation.id,
+        }),
       });
 
       if (!response.ok) {

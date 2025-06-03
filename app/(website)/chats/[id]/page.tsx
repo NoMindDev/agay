@@ -84,7 +84,7 @@ export default function ConversationPage({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: combinedQuestion }), // Change it from here
+        body: JSON.stringify({ question: inputValue, session_id: id }), // Change it from here
       });
 
       if (!response.ok) {
