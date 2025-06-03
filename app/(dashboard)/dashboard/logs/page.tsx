@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const logEntry = [
   {
@@ -39,8 +40,8 @@ const logEntry = [
     // actualDate: new Date(2025, 3, 9, 18, 0), // Oct 30, 2025, 6:00 PM
     user_name: " ",
     user_email: " ",
-    event: "Search",
-    description: 'Searched for "User details"',
+    event: "",
+    description: "",
     resource_link: " ",
     resource_name: " ",
   },
@@ -73,23 +74,28 @@ export default function LogsPage() {
   const [dateRangeText, setDateRangeText] = useState("Select Date Range");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [logEntries, setLogEntries] = useState(logEntry);
+  const [loading, setLoading] = useState(true); // <--- new state
+
   // Prevent the user from selecting dates after today
   const today = new Date();
+
   useEffect(() => {
     const fetchLogs = async () => {
-      console.log("Fetching logs...");
-      const res = await fetch("/api/logs");
-      if (!res.ok) {
-        console.error("Failed to fetch logs");
-        return;
+      setLoading(true); // start loading
+      try {
+        const res = await fetch("/api/logs");
+        if (!res.ok) throw new Error("Failed to fetch logs");
+        const data = await res.json();
+        setLogEntries(data.data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false); // stop loading
       }
-      const data = await res.json();
-      console.log(data.data, "logs data");
-      setLogEntries(data.data);
-      // handle response if needed
     };
     fetchLogs();
   }, []);
+
   // Update the date range text when the date range changes
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -138,7 +144,7 @@ export default function LogsPage() {
   });
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-6 overflow-hidden h-full">
       <div className="max-w-6xl mx-auto">
         {/* Date Range Picker */}
         <div className="mb-6">
@@ -219,22 +225,56 @@ export default function LogsPage() {
         </div>
 
         {/* Logs Table */}
-        <div className="border rounded-md overflow-hidden">
+        <div className="border rounded-md max-h-[500px] overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[180px]">Date</TableHead>
-                <TableHead>User Name</TableHead>
-                <TableHead>User Email</TableHead>
-                <TableHead>Event</TableHead>
-                <TableHead className="max-w-[300px]">
+                <TableHead className="w-[180px] sticky top-0 bg-white z-10 border-b">
+                  Date
+                </TableHead>
+                <TableHead className="sticky top-0 bg-white z-10 border-b">
+                  User Name
+                </TableHead>
+                <TableHead className="sticky top-0 bg-white z-10 border-b">
+                  User Email
+                </TableHead>
+                <TableHead className="sticky top-0 bg-white z-10 border-b">
+                  Event
+                </TableHead>
+                <TableHead className="max-w-[300px] sticky top-0 bg-white z-10 border-b">
                   Event Description
                 </TableHead>
-                <TableHead>Resource </TableHead>
+                <TableHead className="sticky top-0 bg-white z-10 border-b">
+                  Resource
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLogs.length > 0 ? (
+              {loading ? (
+                // Show skeleton rows instead of actual data
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-6 w-[180px]" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-[120px]" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-[180px]" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-[100px]" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 max-w-[300px]" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-[100px]" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell className="text-black">
@@ -243,15 +283,6 @@ export default function LogsPage() {
                         : format(new Date(entry.date), "yyyy-MM-dd")}
                     </TableCell>
                     <TableCell className="text-black">
-                      {/* <Avatar className="h-8 w-8">
-                        {entry.user_name ? (
-                          <AvatarImage
-                            src={entry.user.avatar}
-                            alt={entry.user.name}
-                          />
-                        ) : null}
-                        <AvatarFallback>{entry.user.initials}</AvatarFallback>
-                      </Avatar> */}
                       {entry.user_name}
                     </TableCell>
                     <TableCell className="text-black">
@@ -274,18 +305,13 @@ export default function LogsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No logs found for the selected filters.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          Realtime audit logs
         </div>
       </div>
     </div>

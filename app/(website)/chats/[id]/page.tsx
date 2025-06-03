@@ -187,23 +187,25 @@ export default function ConversationPage({
   }, [id]);
 
   return (
-    <>
-      {/* Chat Content */}
-      <div className="flex-1 flex flex-col p-4 overflow-hidden">
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="max-w-3xl mx-auto px-4 flex flex-col space-y-4 pb-4">
+    <div className="flex flex-col h-full">
+      {/* Chat Area */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full" ref={scrollAreaRef}>
+          <div className="max-w-3xl mx-auto px-4 flex flex-col space-y-4 py-4">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+                  className={`flex max-w-[80%] ${
+                    message.sender === "user" ? "flex-row-reverse" : "flex-row"
+                  }`}
                 >
                   {message.sender === "bot" && (
                     <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 mr-2">
                       <Image
-                        src="/nlcs-logo.png?height=32&width=32"
+                        src="/agay.png?height=32&width=32"
                         alt="Bot avatar"
                         width={32}
                         height={32}
@@ -219,11 +221,7 @@ export default function ConversationPage({
                   >
                     <div className="whitespace-pre-wrap">
                       {message.content}
-                      {message.trace && (
-                        <>
-                          <TraceViewer trace={message.trace} />
-                        </>
-                      )}
+                      {message.trace && <TraceViewer trace={message.trace} />}
                     </div>
                   </div>
                 </div>
@@ -231,37 +229,37 @@ export default function ConversationPage({
             ))}
           </div>
         </ScrollArea>
+      </div>
 
-        {/* Input Area */}
-        <div className="pt-4 px-4">
-          <div className="max-w-3xl mx-auto relative">
-            <input
-              type="text"
-              placeholder="Ask Agay"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              className="w-full border border-gray-300 rounded-full py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent"
-            />
-            <button
-              onClick={handleSendMessage}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
-              ) : (
-                <Send className="h-5 w-5" />
-              )}
-            </button>
-          </div>
+      {/* Fixed Input Area */}
+      <div className="w-full sticky bottom-0 z-10">
+        <div className="max-w-3xl mx-auto px-4 py-3 relative">
+          <input
+            type="text"
+            placeholder="Ask Agay"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            className="w-full border border-gray-300 rounded-full py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

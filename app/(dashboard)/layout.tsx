@@ -9,22 +9,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const supabase = await createClient();
-
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
-
-  // if (!user) {
-  //   redirect("/sign-in"); // Redirect to the login page if not authenticated
-  // }
-
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        {children}
+    <div className="flex h-screen overflow-hidden bg-white">
+      {/* Fixed Sidebar */}
+      <div className="w-[240px] shrink-0">
+        <Sidebar />
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Fixed Header */}
+        <div className="shrink-0">
+          <Header />
+        </div>
+
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-auto bg-white p-4">{children}</div>
       </div>
     </div>
   );

@@ -148,7 +148,7 @@ export default function ChatViewPage({
                   {message.sender === "bot" && (
                     <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 mr-2">
                       <Image
-                        src="/nlcs-logo.png?height=32&width=32"
+                        src="/agay.png?height=32&width=32"
                         alt="Bot avatar"
                         width={32}
                         height={32}

@@ -14,7 +14,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-56 bg-white border-r border-gray-200 flex flex-col h-screen">
       <div className="p-4 flex items-center gap-2">
         <div className="h-8 w-8 relative overflow-hidden rounded">
           {/* Replace with your actual logo PNG */}

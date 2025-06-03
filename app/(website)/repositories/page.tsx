@@ -1,19 +1,23 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Search, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function RepositoriesPage() {
   const [repositoryFiles, setRepositoryFiles] = useState<any[]>([]);
-  const [isLoading, setisLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     const fetchFiles = async () => {
-      setisLoading(true);
+      setLoading(true);
       const res = await fetch("/api/files");
       const files = await res.json();
-      console.log(files, " data from api");
       const repoFiles = files.map((file: any) => ({
         ...file,
         type: "pdf",
@@ -21,7 +25,7 @@ export default function RepositoriesPage() {
         thumbnail: "/placeholder.jpeg?height=200&width=150",
       }));
       setRepositoryFiles(repoFiles);
-      setisLoading(false);
+      setLoading(false);
     };
     fetchFiles();
   }, []);
@@ -29,11 +33,8 @@ export default function RepositoriesPage() {
   const saveToLog = async (file: any) => {
     const res = await fetch("/api/logs", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        // date:new Date().toISOString(),
         user_email: "",
         user_name: "",
         event: "viewing file",
@@ -46,19 +47,16 @@ export default function RepositoriesPage() {
     console.log(data, " data from logs");
     window.open(file.link, "_blank");
   };
-  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredFiles = repositoryFiles.filter((file) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  console.log(filteredFiles, " filtered files", searchQuery);
-
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-full flex flex-col p-6">
+      <div className="max-w-4xl mx-auto w-full flex flex-col h-full">
         {/* Search Bar */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             className="pl-10 bg-white"
@@ -67,54 +65,64 @@ export default function RepositoriesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-
         {/* Files Section */}
-        {isLoading ? (
-          "Loading files..."
-        ) : (
-          <div>
-            <h2 className="text-lg font-medium mb-4">Files</h2>
-            {filteredFiles.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredFiles.map((file, index) => (
-                  <a
-                    key={index}
-                    href={file.link} // Adjust this path if files are stored elsewhere
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      saveToLog(file);
-                    }}
-                  >
-                    <div className="bg-white rounded-md overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
-                      <div className="relative">
-                        <div className="absolute top-2 left-2 bg-red-500 rounded p-1">
-                          <FileText className="h-4 w-4 text-white" />
-                        </div>
-                        <Image
-                          src={file.thumbnail}
-                          alt={file.name}
-                          width={150}
-                          height={200}
-                          className="w-full h-40 object-cover"
-                        />
+        <h2 className="text-lg font-medium mb-4">Files</h2>
+        <ScrollArea className="flex-1">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pr-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-md overflow-hidden shadow-sm"
+                >
+                  <Skeleton className="h-40 w-full" />
+                  <div className="p-3">
+                    <Skeleton className="h-4 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredFiles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pr-4">
+              {filteredFiles.map((file, index) => (
+                <a
+                  key={index}
+                  href={file.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    saveToLog(file);
+                  }}
+                >
+                  <div className="bg-white rounded-md overflow-hidden shadow-sm cursor-pointer transition-transform duration-200 ease-in-out hover:scale-105 hover:shadow-lg">
+                    <div className="relative">
+                      <div className="absolute top-2 left-2 bg-red-500 rounded p-1">
+                        <FileText className="h-4 w-4 text-white" />
                       </div>
-                      <div className="p-3">
-                        <p className="text-sm font-medium truncate text-black">
-                          {file.name}
-                        </p>
-                      </div>
+                      <Image
+                        src={file.thumbnail}
+                        alt={file.name}
+                        width={150}
+                        height={200}
+                        className="w-full h-40 object-cover"
+                      />
                     </div>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No files found.</p>
-            )}
-          </div>
-        )}
+                    <div className="p-3">
+                      <p className="text-sm font-medium truncate text-black">
+                        {file.name}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No files found.</p>
+          )}
+        </ScrollArea>
       </div>
     </div>
   );
