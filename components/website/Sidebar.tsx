@@ -8,6 +8,7 @@ import { Home, Plus, Send, Pencil } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Conversation = {
   id: string;
@@ -22,6 +23,7 @@ const Sidebar = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const handleNewChat = () => {
     router.push(`/chats`);
@@ -67,6 +69,7 @@ const Sidebar = () => {
   // Fetch conversations
   useEffect(() => {
     const fetchConversations = async () => {
+      setLoading(true);
       const {
         data: { user },
         error: userError,
@@ -93,6 +96,8 @@ const Sidebar = () => {
         setConversations(data as Conversation[]);
         toast.success("Conversations loaded!");
       }
+
+      setLoading(false);
     };
 
     fetchConversations();
@@ -183,44 +188,55 @@ const Sidebar = () => {
         </div>
         <ScrollArea className="h-full">
           <div className="space-y-1 px-2 pb-9">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                className={`group flex items-center justify-between px-3 py-2 rounded-lg ${
-                  pathname === `/chats/${conv.id}`
-                    ? "bg-gray-200 text-gray-900"
-                    : "hover:bg-gray-200 text-gray-700"
-                }`}
-              >
-                {editingId === conv.id ? (
-                  <input
-                    className="text-sm w-full bg-transparent outline-none border-b border-gray-300"
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                    onBlur={handleRenameSubmit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRenameSubmit();
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <Link
-                    href={`/chats/${conv.id}`}
-                    className="flex-1 truncate text-sm overflow-hidden whitespace-nowrap max-w-[160px]"
-                  >
-                    {conv.title}
-                  </Link>
-                )}
-                {editingId !== conv.id && (
-                  <button
-                    className="invisible group-hover:visible ml-2 text-gray-400 hover:text-gray-600"
-                    onClick={() => handleRename(conv.id)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                )}
+            {loading ? (
+              // Skeleton Placeholder
+              <div className="space-y-2 px-2 pb-9">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full rounded-lg" />
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="space-y-1 px-2 pb-9">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={`group flex items-center justify-between px-3 py-2 rounded-lg ${
+                      pathname === `/chats/${conv.id}`
+                        ? "bg-gray-200 text-gray-900"
+                        : "hover:bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {editingId === conv.id ? (
+                      <input
+                        className="text-sm w-full bg-transparent outline-none border-b border-gray-300"
+                        value={editedTitle}
+                        onChange={(e) => setEditedTitle(e.target.value)}
+                        onBlur={handleRenameSubmit}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleRenameSubmit();
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <Link
+                        href={`/chats/${conv.id}`}
+                        className="flex-1 truncate text-sm overflow-hidden whitespace-nowrap max-w-[160px]"
+                      >
+                        {conv.title}
+                      </Link>
+                    )}
+                    {editingId !== conv.id && (
+                      <button
+                        className="invisible group-hover:visible ml-2 text-gray-400 hover:text-gray-600"
+                        onClick={() => handleRename(conv.id)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -247,7 +263,7 @@ const Sidebar = () => {
             }`}
           >
             <Send className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-700">Repositories</span>
+            <span className="text-gray-700">Documents</span>
           </Link>
         </div>
       </div>

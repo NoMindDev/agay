@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Package, Clock, MessageSquare, Settings } from "lucide-react";
+import { Home, Package, Clock, MessageSquare, Settings,Users } from "lucide-react";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -52,7 +52,7 @@ const Sidebar = () => {
             }`}
           >
             <Package className="h-5 w-5 mr-3 text-gray-500" />
-            <span>Repositories</span>
+            <span>Documents</span>
           </Link>
           <Link
             href="/dashboard/logs"
@@ -84,8 +84,8 @@ const Sidebar = () => {
                 : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
             }`}
           >
-            <Settings className="h-5 w-5 mr-3 text-gray-500" />
-            <span>Settings</span>
+            <Users className="h-5 w-5 mr-3 text-gray-500" />
+            <span>Users</span>
           </Link>
         </nav>
       </div>

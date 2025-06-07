@@ -33,6 +33,7 @@ import { useUserStore } from "@/lib/store/user";
 import { readUserSession } from "@/utils/supabase/client";
 import { deleteMemberById, readMembers } from "@/app/actions";
 import { MemberWithPermission } from "@/lib/type";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SettingsPage() {
   const user = useUserStore((state) => state.user);
@@ -152,6 +153,27 @@ export default function SettingsPage() {
     </TableHead>
   );
 
+  const renderSkeletonRows = (count: number) => {
+    return Array.from({ length: count }).map((_, index) => (
+      <TableRow key={`skeleton-${index}`}>
+        <TableCell>
+          <Skeleton className="h-4 w-32" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-48" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-40" />
+        </TableCell>
+        {isAdmin && (
+          <TableCell>
+            <Skeleton className="h-4 w-16" />
+          </TableCell>
+        )}
+      </TableRow>
+    ));
+  };
+
   return (
     <div className="flex-1 p-6">
       <div className="max-w-6xl mx-auto">
@@ -185,46 +207,51 @@ export default function SettingsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members?.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="text-black">
-                    {member.member.name}
-                  </TableCell>
-                  <TableCell className="text-black">
-                    {member.member.email}
-                  </TableCell>
-                  <TableCell className="text-black">
-                    {formatDate(member.member.created_at)}
-                  </TableCell>
-                  {isAdmin && (
-                    <TableCell className="text-black">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white">
-                          <DropdownMenuItem
-                            onClick={() => handleEditMember(member.id)}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Update Member
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => handleDeleteMember(member.id)}
-                          >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Delete Member
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              {members === null
+                ? renderSkeletonRows(5) // Adjust the number of rows you want to show
+                : members.map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="text-black">
+                        {member.member.name}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {member.member.email}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {formatDate(member.member.created_at)}
+                      </TableCell>
+                      {isAdmin && (
+                        <TableCell className="text-black">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="bg-white"
+                            >
+                              <DropdownMenuItem
+                                onClick={() => handleEditMember(member.id)}
+                              >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Update Member
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={() => handleDeleteMember(member.id)}
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete Member
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>
