@@ -6,11 +6,22 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function ForgotPassword(props: {
   searchParams: Promise<Message>;
 }) {
   const searchParams = await props.searchParams;
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await (await supabase).auth.getUser();
+
+  if (user) {
+    redirect("/");
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
@@ -46,6 +57,10 @@ export default async function ForgotPassword(props: {
                 placeholder="you@example.com"
                 required
                 className="p-3 border rounded-md w-full"
+                type="email"
+                pattern="^[\w-.]+@([\w-]+\.)+[\w-]{2,}$"
+                title="Please enter a valid email address"
+                autoComplete="email"
               />
             </div>
 

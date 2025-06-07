@@ -65,7 +65,7 @@ const WebsiteLanding = () => {
               <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mb-4">
                 <BookOpen className="h-4 w-4 text-green-500" />
               </div>
-              <h3 className="font-medium text-lg mb-1">Browse Repositories</h3>
+              <h3 className="font-medium text-lg mb-1">Browse Documents</h3>
               <p className="text-sm text-gray-500">
                 Search and explore content from your uploaded documents.
               </p>

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import TraceViewer from "@/lib/trace_utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Message = {
   id: string;
@@ -24,6 +25,7 @@ export default function ConversationPage({
   const supabase = createClient();
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -159,6 +161,7 @@ export default function ConversationPage({
     if (!id) return;
 
     const fetchMessages = async () => {
+      setIsPageLoading(true);
       const { data, error } = await supabase
         .from("messages")
         .select("id, content, sender, created_at, trace") // include trace here
@@ -167,6 +170,7 @@ export default function ConversationPage({
 
       if (error) {
         console.error("Error fetching messages:", error);
+        setIsPageLoading(true);
         return;
       }
 
@@ -181,6 +185,7 @@ export default function ConversationPage({
         }));
         setMessages(mappedMessages);
       }
+      setIsPageLoading(true);
     };
 
     fetchMessages();
@@ -192,7 +197,7 @@ export default function ConversationPage({
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollAreaRef}>
           <div className="max-w-3xl mx-auto px-4 flex flex-col space-y-4 py-4">
-            {messages.map((message) => (
+            {/* {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
@@ -226,7 +231,65 @@ export default function ConversationPage({
                   </div>
                 </div>
               </div>
-            ))}
+            ))} */}
+            {isPageLoading && messages.length === 0
+              ? // Show skeletons when loading and there are no messages
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex justify-start">
+                    <div className="flex max-w-[80%] flex-row">
+                      <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 mr-2">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                      <div className="p-3">
+                        <Skeleton className="h-4 w-[250px] mb-2" />
+                        <Skeleton className="h-4 w-[180px]" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              : messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.sender === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`flex max-w-[80%] ${
+                        message.sender === "user"
+                          ? "flex-row-reverse"
+                          : "flex-row"
+                      }`}
+                    >
+                      {message.sender === "bot" && (
+                        <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 mr-2">
+                          <Image
+                            src="/agay.png?height=32&width=32"
+                            alt="Bot avatar"
+                            width={32}
+                            height={32}
+                          />
+                        </div>
+                      )}
+                      <div
+                        className={`p-3 rounded-lg ${
+                          message.sender === "user"
+                            ? "bg-blue-500 text-white rounded-tr-none"
+                            : "bg-gray-100 text-gray-800 rounded-tl-none"
+                        }`}
+                      >
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
+                          {message.trace && (
+                            <TraceViewer trace={message.trace} />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
           </div>
         </ScrollArea>
       </div>

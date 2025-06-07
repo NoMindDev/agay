@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,13 +11,29 @@ import { SubmitButton } from "@/components/submit-button";
 import { signInAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Login() {
   const [message, setMessage] = useState<Message | null>(null);
   const router = useRouter(); // Initialize useRouter
 
+  useEffect(() => {
+    const supabase = createClient();
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        toast.info("You are already logged in.");
+        router.replace("/");
+      }
+    };
+    checkUser();
+  }, [router]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setMessage(null);
     const formData = new FormData(event.currentTarget);
 
     const result = await signInAction(formData);
