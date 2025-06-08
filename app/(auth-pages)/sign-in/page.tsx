@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
 import { signInAction } from "@/app/actions";
@@ -15,6 +16,7 @@ import { createClient } from "@/utils/supabase/client";
 
 export default function Login() {
   const [message, setMessage] = useState<Message | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter(); // Initialize useRouter
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function Login() {
               />
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor="password" className="text-gray-700">
                   Password
@@ -98,6 +100,37 @@ export default function Login() {
                 required
                 className="p-3 border rounded-md w-full"
               />
+            </div> */}
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="password" className="text-gray-700">
+                  Password
+                </Label>
+                <Link
+                  className="text-xs text-foreground hover:underline"
+                  href="/forgot-password"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  id="password"
+                  placeholder="Your password"
+                  required
+                  className="p-3 pr-10 border rounded-md w-full"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {message && <FormMessage message={message} />}
