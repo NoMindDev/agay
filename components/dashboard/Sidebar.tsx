@@ -4,7 +4,15 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Package, Clock, MessageSquare, Settings,Users } from "lucide-react";
+import {
+  Home,
+  Package,
+  Clock,
+  MessageSquare,
+  Settings,
+  Users,
+  Files,
+} from "lucide-react";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -86,6 +94,17 @@ const Sidebar = () => {
           >
             <Users className="h-5 w-5 mr-3 text-gray-500" />
             <span>Users</span>
+          </Link>
+          <Link
+            href="/dashboard/upload"
+            className={`flex items-center px-4 py-2 text-sm ${
+              isActive("/dashboard/settings")
+                ? "bg-gray-100 text-gray-700 rounded-md mx-2"
+                : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
+            }`}
+          >
+            <Files className="h-5 w-5 mr-3 text-gray-500" />
+            <span>Add Documents</span>
           </Link>
         </nav>
       </div>

@@ -222,7 +222,7 @@ const UploadPage = () => {
               <Button
                 onClick={handleUpload}
                 disabled={!file || uploading}
-                className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50"
+                className="flex-1 h-10 text-lg font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50"
               >
                 {uploading ? (
                   <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ const UploadPage = () => {
                 ) : (
                   <div className="flex items-center gap-2">
                     <Upload className="w-5 h-5" />
-                    Upload to Drive
+                    Upload to Database
                   </div>
                 )}
               </Button>
@@ -240,17 +240,17 @@ const UploadPage = () => {
               <Button
                 onClick={handleTrain}
                 disabled={!uploaded || training}
-                className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:opacity-50"
+                className="flex-1 h-10 text-lg font-semibold bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:opacity-50"
               >
                 {training ? (
                   <div className="flex items-center gap-2">
                     <Brain className="w-5 h-5 animate-pulse" />
-                    Training AI...
+                    Training RAG Agent...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5" />
-                    Start Training
+                    Start Training RAG Agent
                   </div>
                 )}
               </Button>
@@ -325,7 +325,7 @@ const UploadPage = () => {
               <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                 <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
                 <h3 className="text-lg font-semibold text-green-800">
-                  Ready for Training!
+                  Ready for Training RAG Agent!
                 </h3>
                 <p className="text-sm text-green-600">
                   Your document has been uploaded successfully
