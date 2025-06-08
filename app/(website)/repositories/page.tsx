@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Search, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/utils/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -31,12 +32,16 @@ export default function RepositoriesPage() {
   }, []);
 
   const saveToLog = async (file: any) => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const res = await fetch("/api/logs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_email: "",
-        user_name: "",
+        user_email: user?.email,
+        user_name: user?.user_metadata?.name,
         event: "viewing file",
         description: "file viewed by the user",
         resource_name: file.name,

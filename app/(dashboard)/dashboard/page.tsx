@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Users, AlertCircle } from "lucide-react";
-import Link from "next/link"; // Import the Link component
+import { MessageSquare, Users, AlertCircle, Files } from "lucide-react";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 
 const DashboardLanding = () => {
@@ -42,7 +42,7 @@ const DashboardLanding = () => {
         Hello {isLoading ? "Name" : name}, we are glad to have you.
       </p>
 
-      <div className="grid grid-cols-3 gap-6 w-full max-w-4xl">
+      <div className="grid grid-cols-4 gap-6 w-full max-w-6xl">
         {/* Conversations Card */}
         <Link href="/dashboard/conversations">
           <Card className="bg-gray-50 border border-gray-200 cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl flex flex-col justify-between min-h-[200px]">
@@ -83,6 +83,21 @@ const DashboardLanding = () => {
               <h3 className="font-medium text-lg mb-1">Check Audits</h3>
               <p className="text-sm text-gray-500">
                 Review the organization's audit logs
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Upload Card */}
+        <Link href="/dashboard/upload">
+          <Card className="bg-gray-50 border border-gray-200 cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl flex flex-col justify-between min-h-[200px]">
+            <CardContent className="p-6 flex flex-col justify-between h-full">
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                <Files className="h-4 w-4 text-blue-400" />
+              </div>
+              <h3 className="font-medium text-lg mb-1">Upload Documents</h3>
+              <p className="text-sm text-gray-500">
+                Upload the New land Record Documents
               </p>
             </CardContent>
           </Card>
