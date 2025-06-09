@@ -84,6 +84,7 @@ const Sidebar = () => {
             <MessageSquare className="h-5 w-5 mr-3 text-gray-500" />
             <span>Conversations</span>
           </Link>
+
           <Link
             href="/dashboard/settings"
             className={`flex items-center px-4 py-2 text-sm ${
@@ -95,10 +96,11 @@ const Sidebar = () => {
             <Users className="h-5 w-5 mr-3 text-gray-500" />
             <span>Users</span>
           </Link>
+
           <Link
             href="/dashboard/upload"
             className={`flex items-center px-4 py-2 text-sm ${
-              isActive("/dashboard/settings")
+              isActive("/dashboard/upload")
                 ? "bg-gray-100 text-gray-700 rounded-md mx-2"
                 : "text-gray-600 hover:bg-gray-100 rounded-md mx-2"
             }`}
