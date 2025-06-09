@@ -66,7 +66,7 @@ export default function ConversationPage({
     // Add temporary loading message
     const loadingMessage: Message = {
       id: "loading",
-      content: "Thinking...",
+      content: "Agent is Cooking...",
       sender: "bot",
       timestamp: new Date(),
     };

@@ -1,24 +1,22 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
+// Removes ANSI color codes from trace logs
 function stripAnsi(input: string): string {
-  return input.replace(
-    // Regex to remove ANSI escape codes
-    /\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g,
-    ""
-  );
+  return input.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "");
 }
 
 function prettifyTrace(trace: string): string {
   const clean = stripAnsi(trace);
+
   return clean
     .replace(/> Entering new .*?chain\.\.\./g, "")
     .replace(/> Finished chain\./g, "")
-    .replace(/Thought:/g, "**🤔 Thought:**")
-    .replace(/Action:/g, "**⚙️ Action:**")
-    .replace(/Action Input:/g, "**🔢 Action Input:**")
-    .replace(/Observation:/g, "**📊 Observation:**")
-    .replace(/Final Answer:/g, "**✅ Final Answer:**")
+    .replace(/Thought:/g, "**🤔 Thought:** ")
+    .replace(/Action Input:/g, "**🔢 Action Input:** ")
+    .replace(/Action:/g, "**⚙️ Action:** ")
+    .replace(/Observation:/g, "**📊 Observation:** ")
+    .replace(/Final Answer:/g, "**✅ Final Answer:** ")
     .trim();
 }
 
@@ -35,11 +33,13 @@ export default function TraceViewer({ trace }: { trace: string }) {
         onClick={() => setIsOpen(!isOpen)}
         className="text-blue-600 font-medium hover:underline focus:outline-none"
       >
-        {isOpen ? "Hide Reasoning ▲" : "Show Reasoning ▼"}
+        {isOpen
+          ? "🧠 Collapse Agent's Reasoning"
+          : "🧠 See How Agent Figured It Out"}
       </button>
 
       {isOpen && (
-        <div className="mt-2 text-gray-500">
+        <div className="mt-2 text-gray-700 whitespace-pre-wrap prose prose-sm max-w-none">
           <ReactMarkdown>{markdown}</ReactMarkdown>
         </div>
       )}
