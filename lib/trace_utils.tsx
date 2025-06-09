@@ -39,8 +39,10 @@ export default function TraceViewer({ trace }: { trace: string }) {
       </button>
 
       {isOpen && (
-        <div className="text-xs mt-2 text-gray-700 whitespace-pre-wrap prose prose-sm max-w-none italic">
-          <ReactMarkdown>{markdown}</ReactMarkdown>
+        <div className="text-xs mt-2 text-gray-700 whitespace-pre-wrap">
+          <div className="italic prose prose-sm max-w-none">
+            <ReactMarkdown>{markdown}</ReactMarkdown>
+          </div>
         </div>
       )}
     </div>
